@@ -171,10 +171,6 @@ BibTeX format:
 **Please have a look also at disclaimer.txt, as this work is included in the European Union Horizon 2020 project 5G-CARMEN co-funded by the EU.**
 
 
-This project includes the **json11** C++ library by Dropbox: [github.com/dropbox/json11](https://github.com/dropbox/json11)
-
-
-
 # Contact and Licensing
 
 This project, since it has been released to the public, is licensed under the GPL-2.0 license. Please see also the *LICENSE* file.
