@@ -12,7 +12,7 @@ find_package(Boost REQUIRED COMPONENTS)
 find_package(cpprestsdk REQUIRED)
 find_package(GeographicLib REQUIRED)
 find_package(nlohmann_json REQUIRED CONFIG)
-#find_package(s-ldm-config REQUIRED CONFIG COMPONENTS asn1 decoder-module options vehicle-visualizer)
+#find_package(s-ldm-components REQUIRED CONFIG COMPONENTS asn1 decoder-module options vehicle-visualizer)
 
 add_executable(s-ldm)
 

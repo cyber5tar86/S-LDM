@@ -6,8 +6,6 @@ project(decoder-module
     DESCRIPTION "Decoder Module"
 )
 
-add_subdirectory(asn1)
-
 add_library(${PROJECT_NAME})
 
 target_sources(${PROJECT_NAME} PRIVATE

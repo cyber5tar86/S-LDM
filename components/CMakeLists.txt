@@ -4,7 +4,7 @@ project(s-ldm-components
     LANGUAGES C CXX
 )
 
-#add_subdirectory(asn1)
+add_subdirectory(asn1)
 add_subdirectory(decoder-module)
 add_subdirectory(options)
 add_subdirectory(vehicle-visualizer)
