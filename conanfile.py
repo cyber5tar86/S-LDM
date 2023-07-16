@@ -21,7 +21,13 @@ class SLDMRecipe(ConanFile):
         cmake_layout(self)
 
     def requirements(self):
+        self.requires("amqp-cpp/4.3.24")
+        self.requires("asio/1.28.0")
+        self.requires("boost/1.81.0")
+        self.requires("cpprestsdk/2.10.18")
+        self.requires("geographiclib/1.52")
         self.requires("nlohmann_json/3.11.2")
+        self.requires("spdlog/1.12.0")
 
     def generate(self):
         deps = CMakeDeps(self)

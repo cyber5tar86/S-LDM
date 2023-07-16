@@ -1,0 +1,75 @@
+{
+    "version": 6,
+    "cmakeMinimumRequired": {
+      "major": 3,
+      "minor": 23,
+      "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "common.provider.conan",
+            "description":"",
+            "hidden": true,
+            "toolchainFile": "${sourceDir}/conan/conan_toolchain.cmake"
+        },
+        {
+            "name": "common.provider.system",
+            "description":"",
+            "hidden": true
+        },
+        {
+            "name": "common.binaryDir",
+            "description": "",
+            "hidden": true,
+            "binaryDir": "${sourceDir}/build/${presetName}"
+        },
+        {
+            "name": "common.flags",
+            "description": "",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_CXX_FLAGS": "-Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Wcast-qual -Wshadow -Wformat=2 -Wundef -Werror=float-equal"
+            }
+        },
+        {
+            "name": "common.build.libs.shared",
+            "description": "",
+            "hidden": true,
+            "cacheVariables": {
+                "BUILD_SHARED_LIBS": "ON"
+            }
+        },
+        {
+            "name": "common.build.libs.static",
+            "description": "",
+            "hidden": true,
+            "cacheVariables": {
+                "BUILD_SHARED_LIBS": "OFF"
+            }
+        },
+        {
+            "name": "common.build.type.debug",
+            "description": "",
+            "hidden": true,
+            "inherits": [
+                "common.binaryDir"
+            ],
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_EXPORT_COMPILE_COMMANDS" : "ON"
+            }
+        },
+        {
+            "name": "common.build.type.release",
+            "description": "",
+            "hidden": true,
+            "inherits": [
+                "common.binaryDir"
+            ],
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_EXPORT_COMPILE_COMMANDS" : "ON"
+            }
+        }
+    ]
+}

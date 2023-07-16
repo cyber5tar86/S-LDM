@@ -1,0 +1,56 @@
+{
+    "version": 6,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 23,
+        "patch": 0
+    },
+    "include": [
+        "CMakeCommonPresets.json"
+    ],
+    "configurePresets": [
+        {
+            "name": "dependencies-provider",
+            "hidden": true,
+            "inherits": [
+                "common.provider.conan"
+            ]
+        },
+        {
+            "name": "release",
+            "description": "Build the application in Release mode",
+            "inherits": [
+                "common.build.type.release",
+                "dependencies-provider"
+            ]
+        },
+        {
+            "name": "debug",
+            "description": "Build the application in Debug mode",
+            "inherits": [
+                "common.build.type.debug",
+                "dependencies-provider"
+            ]
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "release",
+            "configurePreset": "release"
+        },
+        {
+            "name": "debug",
+            "configurePreset": "debug"
+        }
+    ],
+    "packagePresets": [
+        {
+            "name": "release",
+            "configurePreset": "release"
+        },
+        {
+            "name": "debug",
+            "configurePreset": "debug"
+        }
+    ]
+}

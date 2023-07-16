@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "name": "x86_64",
+            "includePath": [
+                "${workspaceFolder}/**"
+            ],
+            "cppStandard": "c++17",
+            "intelliSenseMode": "gcc-x64",
+            "compileCommands": "${workspaceFolder}/s-ldm/build/compile_commands.json"
+        }
+    ],
+    "version": 4
+}
