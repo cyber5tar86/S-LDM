@@ -1,48 +1,94 @@
-//
-// Created by carlos on 06/05/21.
-//
+/**
+ * @file geonet.h
+ * @author carlos
+ * @brief 
+ * @version 0.1
+ * @date 2021-05-06
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
 
-#ifndef S_LDM_GEONET_H
-#define S_LDM_GEONET_H
-
+#ifndef GEONET_H
+#define GEONET_H
 
 #include <cstdint>
 #include <map>
-#include <set>
 #include <mutex>
-#include "basicHeader.h"
-#include "commonHeader.h"
-#include "shbHeader.h"
-#include "gbcHeader.h"
+#include <set>
+#include "basicheader.h"
+#include "commonheader.h"
+#include "gbcheader.h"
+#include "shbheader.h"
 
 namespace etsiDecoder
 {
-    class GeoNet {
-    public:
+/**
+ * @brief 
+ * 
+ */
+class GeoNet
+{
+public:
+    /**
+     * @brief Construct a new Geo Net object
+     * 
+     */
+    GeoNet();
 
-        GeoNet();
+    /**
+     * @brief Destroy the Geo Net object
+     * 
+     */
+    ~GeoNet();
 
-        ~GeoNet();
+    /**
+     * @brief 
+     * 
+     * @param packet 
+     * @param dataIndication 
+     * @return gnError_e 
+     */
+    gnError_e decodeGN(unsigned char *packet, GNDataIndication_t *dataIndication);
 
-        gnError_e decodeGN(unsigned char * packet, GNDataIndication_t* dataIndication);
+private:
+    /**
+     * @brief 
+     * 
+     * @param dataIndication 
+     * @return GNDataIndication_t* 
+     */
+    GNDataIndication_t *processSHB(GNDataIndication_t *dataIndication);
 
+    /**
+     * @brief 
+     * 
+     * @param dataIndication 
+     * @param shape 
+     * @return GNDataIndication_t* 
+     */
+    GNDataIndication_t *processGBC(GNDataIndication_t *dataIndication, uint8_t shape);
 
-    private:
-        GNDataIndication_t* processSHB(GNDataIndication_t* dataIndication);
+    /**
+     * @brief 
+     * 
+     * @param lifeTime 
+     * @param seconds 
+     * @return true 
+     * @return false 
+     */
+    bool decodeLT(uint8_t lifeTime, double *seconds);
 
-        GNDataIndication_t* processGBC(GNDataIndication_t* dataIndication, uint8_t shape);
+    // ETSI 302 636-4-1 ANNEX H: GeoNetworking protocol constans
+    uint8_t m_GnPtotocolVersion = 1;                //!< 
+    uint8_t m_GnIfType = 1;                         //!< 
+    uint32_t m_GnPaiInterval = 80;                  //!< 
+    uint32_t m_GnMaxSduSize = 1398;                 //!< 
+    uint8_t m_GnMaxGeoNetworkingHeaderSize = 88;    //!< 
+    uint8_t m_GnSecurity = 0;                       //! Disabled
+    uint16_t m_GnDefaultTrafficClass = 0;           //!< s
+};
 
-        bool decodeLT(uint8_t lifeTime, double * seconds);
+} // namespace GEONET_H
 
-        //ETSI 302 636-4-1 ANNEX H: GeoNetworking protocol constans
-        uint8_t m_GnPtotocolVersion = 1;
-        uint8_t m_GnIfType = 1;
-        uint32_t m_GnPaiInterval = 80;
-        uint32_t m_GnMaxSduSize = 1398;
-        uint8_t m_GnMaxGeoNetworkingHeaderSize = 88;
-        uint8_t m_GnSecurity = 0; //!Disabled
-        uint16_t m_GnDefaultTrafficClass = 0;
-    };
-}
-
-#endif //S_LDM_GEONET_H
+#endif // GEONET_H

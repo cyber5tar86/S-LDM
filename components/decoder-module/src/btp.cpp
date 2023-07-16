@@ -1,56 +1,68 @@
-//
-// Created by carlos on 11/05/21.
-//
+/**
+ * @file btp.cpp
+ * @author carlos
+ * @brief 
+ * @version 0.1
+ * @date 2021-05-11
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
+
 #include <iostream>
 #include "btp.h"
-namespace etsiDecoder{
-	btp::btp() = default;
 
-	btp::~btp() = default;
+namespace etsiDecoder
+{
 
-	btpError_e
-	btp::decodeBTP(GNDataIndication_t dataIndication, BTPDataIndication_t* btpDataIndication) {
-		btpHeader header;
+btp::btp() = default;
 
+btp::~btp() = default;
 
-		btpDataIndication->data = dataIndication.data;
+btpError_e
+btp::decodeBTP(GNDataIndication_t dataIndication, BTPDataIndication_t *btpDataIndication)
+{
+    btpHeader header;
 
-		header.removeHeader(btpDataIndication->data);
-		btpDataIndication->data += 4;
+    btpDataIndication->data = dataIndication.data;
 
-		btpDataIndication->BTPType = dataIndication.upperProtocol;
+    header.removeHeader(btpDataIndication->data);
+    btpDataIndication->data += 4;
 
-		if((header.getDestPort ()!= CA_PORT) && (header.getDestPort ()!= DEN_PORT))
-		{
-			std::cerr << "[ERROR] [Decoder] BTP port not supported" << std::endl;
-			return BTP_ERROR;
-		}
+    btpDataIndication->BTPType = dataIndication.upperProtocol;
 
-		btpDataIndication->destPort = header.getDestPort ();
+    if ((header.getDestPort() != CA_PORT) && (header.getDestPort() != DEN_PORT))
+    {
+        std::cerr << "[ERROR] [Decoder] BTP port not supported" << std::endl;
+        return BTP_ERROR;
+    }
 
-		if(btpDataIndication->BTPType == BTP_A)
-		{
-			btpDataIndication->sourcePort = header.getSourcePort ();
-			btpDataIndication->destPInfo = 0;
-		}
-		else if(btpDataIndication->BTPType == BTP_B)  //BTP-B
-		{
-			btpDataIndication->destPInfo = header.getDestPortInfo ();
-			btpDataIndication->sourcePort = 0;
-		}
-		else
-		{
-			std::cerr << "[ERROR] [Decoder] Incorrect transport protocol " << std::endl;
-			return BTP_ERROR;
-		}
+    btpDataIndication->destPort = header.getDestPort();
 
-		btpDataIndication->GnAddress = dataIndication.GnAddressDest;
-		btpDataIndication->GNTraClass = dataIndication.GNTraClass;
-		btpDataIndication->GNRemPLife = dataIndication.GNRemainingLife;
-		btpDataIndication->GNPositionV = dataIndication.SourcePV;
-		btpDataIndication->data = dataIndication.data + 4;
-		btpDataIndication->lenght = dataIndication.lenght - 4;
+    if (btpDataIndication->BTPType == BTP_A)
+    {
+        btpDataIndication->sourcePort = header.getSourcePort();
+        btpDataIndication->destPInfo = 0;
+    }
+    else if (btpDataIndication->BTPType == BTP_B) // BTP-B
+    {
+        btpDataIndication->destPInfo = header.getDestPortInfo();
+        btpDataIndication->sourcePort = 0;
+    }
+    else
+    {
+        std::cerr << "[ERROR] [Decoder] Incorrect transport protocol " << std::endl;
+        return BTP_ERROR;
+    }
 
-		return BTP_OK;
-	}
+    btpDataIndication->GnAddress = dataIndication.GnAddressDest;
+    btpDataIndication->GNTraClass = dataIndication.GNTraClass;
+    btpDataIndication->GNRemPLife = dataIndication.GNRemainingLife;
+    btpDataIndication->GNPositionV = dataIndication.SourcePV;
+    btpDataIndication->data = dataIndication.data + 4;
+    btpDataIndication->lenght = dataIndication.lenght - 4;
+
+    return BTP_OK;
 }
+
+} // namespace etsiDecoder

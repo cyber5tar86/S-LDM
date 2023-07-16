@@ -19,7 +19,7 @@ extern "C"
 #include "DENM.h"
 }
 
-#include "etsiDecoderFrontend.h"
+#include "etsidecoderfrontend.h"
 
 #define DB_CLEANER_INTERVAL_SECONDS 1
 #define DB_DELETE_OLDER_THAN_SECONDS 1 // This value should NEVER be set greater than (5-DB_CLEANER_INTERVAL_SECONDS/60) minutes or (300-DB_CLEANER_INTERVAL_SECONDS) seconds - doing so may break the database age check functionality!

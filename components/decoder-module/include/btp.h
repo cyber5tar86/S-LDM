@@ -1,25 +1,66 @@
-//
-// Created by carlos on 11/05/21.
-//
+/**
+ * @file btp.h
+ * @author carlos
+ * @brief 
+ * @version 0.1
+ * @date 2021-05-11
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
 
-#ifndef S_LDM_BTP_H
-#define S_LDM_BTP_H
-#include "utils.h"
-#include "btpHeader.h"
+#ifndef BTP_H
+#define BTP_H
+
 #include <cstdint>
 #include <cstring>
+#include "btpheader.h"
+#include "utils.h"
 
+/**
+ * @brief 
+ * 
+ */
 #define CA_PORT 2001
+
+/**
+ * @brief 
+ * 
+ */
 #define DEN_PORT 2002
 
-namespace etsiDecoder {
-    class btp {
+namespace etsiDecoder
+{
 
-    public :
-        btp();
-        ~btp();
-        btpError_e decodeBTP(GNDataIndication_t dataIndication, BTPDataIndication_t* btpDataIndication);
+/**
+ * @brief 
+ * 
+ */
+class btp
+{
+public :
+    /**
+     * @brief Construct a new btp object
+     * 
+     */
+    btp();
 
-    };
-}
-#endif //S_LDM_BTP_H
+    /**
+     * @brief Destroy the btp object
+     * 
+     */
+    ~btp();
+
+    /**
+     * @brief 
+     * 
+     * @param dataIndication 
+     * @param btpDataIndication 
+     * @return btpError_e 
+     */
+    btpError_e decodeBTP(GNDataIndication_t dataIndication, BTPDataIndication_t* btpDataIndication);
+};
+
+} // namespace etsiDecoder
+
+#endif // BTP_H

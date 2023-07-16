@@ -15,7 +15,7 @@
 #include <proton/types.hpp>
 
 #include "areafilter.h"
-#include "etsiDecoderFrontend.h"
+#include "etsidecoderfrontend.h"
 #include "ldmmap.h"
 #include "triggermanager.h"
 #include "utils.h"

@@ -12,7 +12,7 @@ find_package(Boost REQUIRED COMPONENTS)
 find_package(cpprestsdk REQUIRED)
 find_package(GeographicLib REQUIRED)
 find_package(nlohmann_json REQUIRED CONFIG)
-find_package(s-ldm-components REQUIRED CONFIG COMPONENTS asn1 decoder-module options vehicle-visualizer)
+#find_package(s-ldm-config REQUIRED CONFIG COMPONENTS asn1 decoder-module options vehicle-visualizer)
 
 add_executable(s-ldm)
 
@@ -32,6 +32,10 @@ target_sources(s-ldm PRIVATE
 
 target_include_directories(s-ldm PRIVATE
     include
+    ../components/asn1/include
+    ../components/options/include
+    ../components/decoder-module/include
+    ../components/vehicle-visualizer/include
 )
 
 target_link_libraries(s-ldm PRIVATE
@@ -43,12 +47,16 @@ target_link_libraries(s-ldm PRIVATE
     pthread
     qpid-proton-cpp
     GeographicLib::GeographicLib
+    decoder-module
+    options
+    vehicle-visualizer
 )
 
 target_compile_features(s-ldm PRIVATE cxx_std_17)
 
-install(TARGETS s-ldm DESTINATION "."
-        RUNTIME DESTINATION bin
-        ARCHIVE DESTINATION lib
-        LIBRARY DESTINATION lib
+install(
+    TARGETS s-ldm DESTINATION "."
+    RUNTIME DESTINATION bin
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
 )

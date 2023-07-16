@@ -1,28 +1,85 @@
-//
-// Created by carlos on 11/05/21.
-//
+/**
+ * @file btpheader.h
+ * @author carlos
+ * @brief 
+ * @version 0.1
+ * @date 2021-05-11
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
 
-#ifndef S_LDM_BTPHEADER_H
-#define S_LDM_BTPHEADER_H
+#ifndef BTPHEADER_H
+#define BTPHEADER_H
 
 #include <cstdint>
 #include <cstring>
 #include "utils.h"
 
-namespace etsiDecoder {
-    class btpHeader {
-    public:
-        btpHeader();
-        ~btpHeader();
-        void removeHeader(unsigned char * buffer);
+namespace etsiDecoder
+{
+/**
+ * @brief 
+ * 
+ */
+class btpHeader
+{
+public:
+    /**
+     * @brief Construct a new btp Header object
+     * 
+     */
+    btpHeader();
 
-        //getters
-        [[nodiscard]] uint16_t getDestPort() const {return m_destinationPort;}
-        [[nodiscard]] uint16_t getSourcePort() const {return m_source_destInfo;}
-        [[nodiscard]] uint16_t getDestPortInfo() const {return m_source_destInfo;}
-    private:
-        uint16_t m_destinationPort; //!< Destination port
-        uint16_t m_source_destInfo; //!< Source port/Destination port info
-    };
-}
-#endif //S_LDM_BTPHEADER_H
+    /**
+     * @brief Destroy the btp Header object
+     * 
+     */
+    ~btpHeader();
+
+    /**
+     * @brief 
+     * 
+     * @param buffer 
+     */
+    void removeHeader(unsigned char * buffer);
+
+    //getters
+    /**
+     * @brief Get the Dest Port object
+     * 
+     * @return uint16_t 
+     */
+    [[nodiscard]] uint16_t getDestPort() const
+    {
+        return m_destinationPort;
+    }
+
+    /**
+     * @brief Get the Source Port object
+     * 
+     * @return uint16_t 
+     */
+    [[nodiscard]] uint16_t getSourcePort() const
+    {
+        return m_source_destInfo;
+    }
+
+    /**
+     * @brief Get the Dest Port Info object
+     * 
+     * @return uint16_t 
+     */
+    [[nodiscard]] uint16_t getDestPortInfo() const
+    {
+        return m_source_destInfo;
+    }
+
+private:
+    uint16_t m_destinationPort{0}; //!< Destination port
+    uint16_t m_source_destInfo{0}; //!< Source port/Destination port info
+};
+
+} // namespace etsiDecoder
+
+#endif // BTPHEADER_H

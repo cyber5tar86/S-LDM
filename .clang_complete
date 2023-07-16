@@ -2,10 +2,9 @@
 -m
 -cpprest
 -qpid-proton
--Iinclude
--Ivehicle-visualizer/include
--Ioptions
--Idecoder-module/asn1/include
--Idecoder-module/include
+-Isldm/include
+-Icomponents/vehicle-visualizer/include
+-Icomponents/options
+-Icomponents/decoder-module/asn1/include
+-Icomponents/decoder-module/include
 -Geographic
--Ijson11

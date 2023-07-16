@@ -8,4 +8,4 @@ project(
 )
 
 add_subdirectory(components)
-add_subdirectory(s-ldm)
+add_subdirectory(sldm)

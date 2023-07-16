@@ -1,23 +1,28 @@
-//
-// Created by carlos on 07/05/21.
-//
+/**
+ * @file sbhheader.cpp
+ * @author carlos
+ * @brief 
+ * @version 0.1
+ * @date 2021-05-07
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
 
-#include "shbHeader.h"
+#include "shbheader.h"
 
 #include <cstring>
 
-namespace etsiDecoder {
-    shbHeader::shbHeader() {
-        m_sourcePV = {};  //!Source long position vector
-        m_reserved = 0; //! aux variable for reading reserved fields
-        m_reserved32 = 0;
-    }
+namespace etsiDecoder
+{
+    shbHeader::shbHeader() = default;
 
     shbHeader::~shbHeader() = default;
 
-    void shbHeader::removeHeader(unsigned char *buffer) {
+    void shbHeader::removeHeader(unsigned char *buffer)
+    {
 
-        //Source long position vector
+        // Source long position vector
         memcpy(m_sourcePV.GnAddress, buffer, 8);
         buffer += 8;
         memcpy(&m_sourcePV.TST, buffer, sizeof(uint32_t));
