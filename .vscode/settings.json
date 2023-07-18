@@ -1,6 +1,8 @@
 {
     "sarif-viewer.connectToGithubCodeScanning": "off",
     "files.associations": {
-        "thread": "cpp"
-    }
+        "thread": "cpp",
+        "atomic": "cpp"
+    },
+    "sonarlint.pathToCompileCommands": "${workspaceFolder}/build/Release/compile_commands.json"
 }

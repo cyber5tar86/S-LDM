@@ -1,3 +1,13 @@
+/**
+ * @file amqpclient.h
+ * @author your name (you@domain.com)
+ * @brief 
+ * @version 0.1
+ * @date 2023-07-18
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
 #ifndef SLDM_AMQP_CLIENT_H
 #define SLDM_AMQP_CLIENT_H
 
@@ -40,7 +50,7 @@ public:
      * @param db_ptr 
      * @param logfile_name 
      */
-    AMQPClient(const std::string &u, const std::string &a, const double &latmin, const double &latmax, const double &lonmin, const double &lonmax, struct options *opts_ptr, const std::shared_ptr<ldmmap::LDMMap> &db_ptr, std::string logfile_name) : 
+    AMQPClient(const std::string &u, const std::string &a, const double &latmin, const double &latmax, const double &lonmin, const double &lonmax, struct options *opts_ptr, const LDMMapPtr &db, std::string logfile_name=std::string()) : 
         conn_url_(u),
         addr_(a),
         max_latitude(latmax),
@@ -48,56 +58,9 @@ public:
         min_latitude(latmin),
         min_longitude(lonmin),
         m_opts_ptr(opts_ptr),
-        m_db_ptr(db_ptr),
-        m_logfile_name(logfile_name),
-        m_quadKey_filter("")
+        m_db(db)
     {
-        m_printMsg = false;
         m_areaFilter.setOptions(m_opts_ptr);
-        m_indicatorTrgMan_enabled = false;
-        m_logfile_file = nullptr;
-        m_reconnect = false;
-        m_allow_sasl = false;
-        m_allow_insecure = false;
-        m_client_id = "unset";
-        m_cont = nullptr;
-        m_idle_timeout_ms = -1;
-    }
-
-    /**
-     * @brief Construct a new AMQPClient object
-     * 
-     * @param u 
-     * @param a 
-     * @param latmin 
-     * @param latmax 
-     * @param lonmin 
-     * @param lonmax 
-     * @param opts_ptr 
-     * @param db_ptr 
-     */
-    AMQPClient(const std::string &u, const std::string &a, const double &latmin, const double &latmax, const double &lonmin, const double &lonmax, struct options *opts_ptr, const std::shared_ptr<ldmmap::LDMMap> &db_ptr) :
-        conn_url_(u),
-        addr_(a),
-        max_latitude(latmax),
-        max_longitude(lonmax),
-        min_latitude(latmin),
-        min_longitude(lonmin),
-        m_opts_ptr(opts_ptr),
-        m_db_ptr(db_ptr),
-        m_quadKey_filter("")
-    {
-        m_printMsg = false;
-        m_areaFilter.setOptions(m_opts_ptr);
-        m_indicatorTrgMan_enabled = false;
-        m_logfile_name = "";
-        m_logfile_file = nullptr;
-        m_reconnect = false;
-        m_allow_sasl = false;
-        m_allow_insecure = false;
-        m_client_id = "unset";
-        m_cont = nullptr;
-        m_idle_timeout_ms = -1;
     }
 
     /**
@@ -105,9 +68,9 @@ public:
      * 
      * @param indicatorTrgMan_ptr 
      */
-    void setIndicatorTriggerManager(indicatorTriggerManager *indicatorTrgMan_ptr)
+    void setIndicatorTriggerManager(const IndicatorTriggerManagerPtr &indicatorTrgMan)
     {
-        m_indicatorTrgMan_ptr = indicatorTrgMan_ptr;
+        m_indicatorTrgMan = indicatorTrgMan;
         m_indicatorTrgMan_enabled = true;
     }
 
@@ -154,7 +117,7 @@ public:
      * @param allow_insecure 
      * @param reconnect 
      */
-    void setCredentials(std::string username, std::string password, bool allow_sasl, bool allow_insecure, bool reconnect = false)
+    void setCredentials(std::string_view const& username, std::string_view const& password, bool allow_sasl, bool allow_insecure, bool reconnect = false)
     {
         m_username = username;
         m_password = password;
@@ -178,7 +141,7 @@ public:
      * 
      * @param id 
      */
-    void setClientID(std::string id)
+    void setClientID(std::string const& id)
     {
         m_client_id = id;
     }
@@ -263,12 +226,7 @@ public:
     }
 
 private:
-
-    /** @brief */
-    std::string conn_url_;
-
-    /** @brief */
-    std::string addr_;
+    std::string mLogTag{"[AMQPClient] "};
 
     /** @brief */
     double max_latitude;
@@ -283,7 +241,7 @@ private:
     double min_longitude;
 
     /** @brief If 'true' each received message will be printed (default: 'false' - enable only for debugging purposes) */
-    bool m_printMsg;
+    bool m_printMsg{false};
 
     /** @brief */
     etsiDecoder::decoderFrontend m_decodeFrontend;
@@ -295,19 +253,25 @@ private:
     struct options *m_opts_ptr;
 
     //!* @brief
-    std::shared_ptr<ldmmap::LDMMap> m_db_ptr{nullptr};
+    LDMMapPtr m_db{nullptr};
 
     //!* @brief
-    indicatorTriggerManager *m_indicatorTrgMan_ptr;
+    IndicatorTriggerManagerPtr m_indicatorTrgMan{nullptr};
 
     //!* @brief
-    bool m_indicatorTrgMan_enabled;
+    bool m_indicatorTrgMan_enabled{false};
 
     //!* @brief
     std::string m_logfile_name;
 
     //!* @brief
-    FILE *m_logfile_file;
+    FILE *m_logfile_file{nullptr};
+
+    /** @brief */
+    std::string conn_url_;
+
+    /** @brief */
+    std::string addr_;
 
     //!* @brief
     std::string m_username;
@@ -316,25 +280,25 @@ private:
     std::string m_password;
 
     //!* @brief
-    bool m_reconnect;
+    bool m_reconnect{false};
 
     //!* @brief
-    bool m_allow_sasl;
+    bool m_allow_sasl{false};
 
     //!* @brief
-    bool m_allow_insecure;
+    bool m_allow_insecure{false};
 
     //!* @brief
-    long m_idle_timeout_ms;
+    long m_idle_timeout_ms{-1};
 
     //!* @brief
-    std::string m_client_id;
+    std::string m_quadKey_filter;
 
     //!* @brief
-    std::string m_quadKey_filter = "";
+    std::atomic<proton::container *> m_cont{nullptr};
 
     //!* @brief
-    std::atomic<proton::container *> m_cont;
+    std::string m_client_id{"unset"};
 };
 
 #endif // SLDM_AMQP_CLIENT_H

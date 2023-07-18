@@ -1,37 +1,138 @@
-#include "areafilter.h"
+#include "v2x/facilities/ldm/areafilter.h"
 
-areaFilter::areaFilter()
+#include <utility>
+
+AreaFilterConfiguration::AreaFilterConfiguration(const nlohmann::json &configuration)
 {
-    m_opts_ptr = nullptr;
+    FromJson(configuration);
 }
 
-bool areaFilter::isInside(double lat, double lon)
+AreaFilterConfiguration::AreaFilterConfiguration(const std::string &configuration)
 {
-    if (m_opts_ptr == nullptr)
-    {
-        return false;
-    }
-
-    if (lat >= m_opts_ptr->min_lat - m_opts_ptr->ext_lat_factor && lat <= m_opts_ptr->max_lat + m_opts_ptr->ext_lat_factor &&
-        lon >= m_opts_ptr->min_lon - m_opts_ptr->ext_lon_factor && lon <= m_opts_ptr->max_lon + m_opts_ptr->ext_lon_factor)
-    {
-        return true;
-    }
-
-    return false;
+    FromString(configuration);
 }
 
-bool areaFilter::isInsideInternal(double lat, double lon)
+double &
+AreaFilterConfiguration::minLat()
 {
-    if (m_opts_ptr == nullptr)
+    return mMinLat;
+}
+
+double &
+AreaFilterConfiguration::minLon()
+{
+    return mMinLon;
+}
+
+double &
+AreaFilterConfiguration::maxLat()
+{
+    return mMaxLat;
+}
+
+double &
+AreaFilterConfiguration::maxLon()
+{
+    return mMaxLon;
+}
+
+double &
+AreaFilterConfiguration::extLatFactor()
+{
+    return mExtLatFactor;
+}
+
+double &
+AreaFilterConfiguration::extLonFactor()
+{
+    return mExtLatFactor;
+}
+
+std::string
+AreaFilterConfiguration::ToString() const
+{
+    return to_string(toJson());
+}
+
+nlohmann::json
+AreaFilterConfiguration::ToJson() const
+{
+    return nlohmann::json{
+        {AreaFilterConfigurationKeys::minLat, mMinLat},
+        {AreaFilterConfigurationKeys::minLon, mMinLon},
+        {AreaFilterConfigurationKeys::maxLat, mMaxLat},
+        {AreaFilterConfigurationKeys::maxLon, mMaxLon},
+        {AreaFilterConfigurationKeys::extLatFactor, mExtLatFactor},
+        {AreaFilterConfigurationKeys::extLonFactor, mExtLonFactor}
+    };
+}
+
+void
+AreaFilterConfiguration::FromString(const std::string &configuration)
+{
+    fromJson(nlohmann::json::parse(configuration));
+}
+
+void
+AreaFilterConfiguration::FromJson(const nlohmann::json &configuration)
+{
+    mMinLat = configuration.at(AreaFilterConfigurationKeys::minLat);
+    mMinLon = configuration.at(AreaFilterConfigurationKeys::minLon);
+    mMaxLat = configuration.at(AreaFilterConfigurationKeys::maxLat);
+    mMaxLon = configuration.at(AreaFilterConfigurationKeys::maxLon);
+    mExtLatFactor = configuration.at(AreaFilterConfigurationKeys::extLatFactor);
+    mExtLonFactor = configuration.at(AreaFilterConfigurationKeys::extLonFactor);
+}
+
+AreaFilter::AreaFilter(AreaFilterConfigurationPtr configuration)
+    : mConfiguration(std::move(configuration))
+{}
+
+AreaFilter::AreaFilter() = default;
+
+bool
+AreaFilter::setConfiguration(const AreaFilterConfigurationPtr &configuration)
+{
+    bool res{false};
+
+    if (configuration != nullptr)
     {
-        return false;
+        mConfiguration = configuration;
+        res = true;
     }
 
-    if (lat >= m_opts_ptr->min_lat && lat <= m_opts_ptr->max_lat &&
-        lon >= m_opts_ptr->min_lon && lon <= m_opts_ptr->max_lon)
+    return res;
+}
+
+bool
+AreaFilter::isInside(double lat, double lon)
+{
+    bool res{false};
+
+    if (mConfiguration != nullptr)
     {
-        return true;
+        if (lat >= mConfiguration->minLat() - mConfiguration->extLatFactor() && lat <= mConfiguration->maxLat() + mConfiguration->extLatFactor() &&
+            lon >= mConfiguration->minLon() - mConfiguration->extLonFactor() && lon <= mConfiguration->maxLon() + mConfiguration->extLonFactor())
+        {
+            res = true;
+        }
+    }
+
+    return res;
+}
+
+bool
+AreaFilter::isInsideInternal(double lat, double lon)
+{
+    bool res{false};
+
+    if (mConfiguration != nullptr)
+    {
+        if (lat >= mConfiguration->minLat() && lat <= mConfiguration->maxLat() &&
+            lon >= mConfiguration->minLon() && lon <= mConfiguration->maxLon())
+        {
+            res = true;
+        }
     }
 
     return false;

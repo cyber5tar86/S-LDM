@@ -5,9 +5,10 @@
 #include <time.h>
 #include <unistd.h>
 #include "amqpclient.h"
+#include "log.h"
 #include "jsonserver.h"
-#include "quadkeyts.h"
 #include "ldmmap.h"
+#include "quadkeyts.h"
 #include "timers.h"
 #include "utils.h"
 #include "vehicle-visualizer.h"
@@ -37,19 +38,19 @@ std::condition_variable synccv;
 std::unordered_map<int, AMQPClient *> amqpclimap;
 std::mutex amqpclimutex;
 
-void AMQPclient_t(const std::shared_ptr<ldmmap::LDMMap> &db_ptr, options_t *opts_ptr, std::string logfile_name, std::string clientID, unsigned int clientIndex, indicatorTriggerManager *itm_ptr, std::string quadKey_filter, AMQPClient *main_amqp_ptr)
+void AMQPclient_t(const LDMMapPtr &db_ptr, options_t *opts_ptr, std::string logfile_name, std::string clientID, unsigned int clientIndex, indicatorTriggerManager *itm_ptr, std::string quadKey_filter, AMQPClient *main_amqp_ptr)
 {
     if (clientIndex >= MAX_ADDITIONAL_AMQP_CLIENTS - 1)
     {
-        fprintf(stderr, "[FATAL ERROR] Error: there is a bug in the code, which attemps to spawn too many AMQP clients.\nPlease report this bug to the developers.\n");
-        fprintf(stderr, "Bug details: client id: %s - client index: %u - max supported clients: %u\n", clientID.c_str(), clientIndex, MAX_ADDITIONAL_AMQP_CLIENTS - 1);
+        LogFatal("Error: there is a bug in the code, which attemps to spawn too many AMQP clients. Please report this bug to the developers.")
+        LogError("Bug details: client id: " << clientID.c_str() << " - client index: " << clientIndex << " - max supported clients: " << MAX_ADDITIONAL_AMQP_CLIENTS - 1)
         terminatorFlag = true;
         return;
     }
 
     if (opts_ptr->amqp_broker_x[clientIndex].amqp_reconnect_after_local_timeout_expired == true)
     {
-        std::cout << "[AMQPClient " << clientID << "] This client will be restarted if a local idle timeout error occurs." << std::endl;
+        LogInfo("[AMQPClient " << clientID << "] This client will be restarted if a local idle timeout error occurs.")
     }
 
     AMQPClient recvClient(std::string(options_string_pop(opts_ptr->amqp_broker_x[clientIndex].broker_url)), std::string(options_string_pop(opts_ptr->amqp_broker_x[clientIndex].broker_topic)), opts_ptr->min_lat, opts_ptr->max_lat, opts_ptr->min_lon, opts_ptr->max_lon, opts_ptr, db_ptr, logfile_name);
@@ -103,8 +104,8 @@ void AMQPclient_t(const std::shared_ptr<ldmmap::LDMMap> &db_ptr, options_t *opts
         {
             if (opts_ptr->amqp_broker_x[clientIndex].amqp_reconnect_after_local_timeout_expired == true && std::string(e.what()) == "amqp:resource-limit-exceeded: local-idle-timeout expired")
             {
-                std::cerr << "[AMQPClient " << clientID << "] Exception occurred: " << e.what() << std::endl;
-                std::cout << "[AMQPClient " << clientID << "] Attempting to restart the client after a local idle timeout expired error..." << std::endl;
+                LogError("[AMQPClient " << clientID << "] Exception occurred: " << e.what())
+                LogInfo("[AMQPClient " << clientID << "] Attempting to restart the client after a local idle timeout expired error...")
                 recvClient.force_container_stop();
                 sleep(1);
                 cli_restart = true;
@@ -115,7 +116,7 @@ void AMQPclient_t(const std::shared_ptr<ldmmap::LDMMap> &db_ptr, options_t *opts
                 amqpclimap.erase(clientIndex);
                 amqpclimutex.unlock();
 
-                std::cerr << "[AMQPClient " << clientID << "] Exception occurred: " << e.what() << std::endl;
+                LogError("[AMQPClient " << clientID << "] Exception occurred: " << e.what())
                 terminatorFlag = true;
 
                 main_amqp_ptr->force_container_stop();
@@ -128,7 +129,7 @@ void AMQPclient_t(const std::shared_ptr<ldmmap::LDMMap> &db_ptr, options_t *opts
 
 typedef struct vizOptions
 {
-    std::shared_ptr<ldmmap::LDMMap> db_ptr;
+    LDMMapPtr db_ptr;
     options_t *opts_ptr;
 } vizOptions_t;
 
@@ -143,11 +144,11 @@ void DBcleaner_callback(const std::shared_ptr<ldmmap::LDMMap > &db_ptr)
 {
     // Create a new timer
     Timer tmr(DB_CLEANER_INTERVAL_SECONDS * 1e3);
-    std::cout << "[INFO] Database cleaner started. The DB will be garbage collected every " << DB_CLEANER_INTERVAL_SECONDS << " seconds." << std::endl;
+    LogInfo("Database cleaner started. The DB will be garbage collected every " << DB_CLEANER_INTERVAL_SECONDS << " seconds.")
 
     if (tmr.start() == false)
     {
-        std::cerr << "[ERROR] Fatal error! Cannot create timer for the DB cleaner thread!" << std::endl;
+        LogFatal("Fatal error! Cannot create timer for the DB cleaner thread!")
         terminatorFlag = true;
     }
     else
@@ -168,7 +169,7 @@ void DBcleaner_callback(const std::shared_ptr<ldmmap::LDMMap > &db_ptr)
 
         if (terminatorFlag == true)
         {
-            std::cerr << "[WARN] Database cleaner terminated due to error." << std::endl;
+            LogWarning("Database cleaner terminated due to error.")
         }
     }
 }
@@ -206,11 +207,11 @@ void VehVizUpdater_callback(const vizOptions_t &vizParams)
 
     // Create a new timer
     Timer tmr(vizParams.opts_ptr->vehviz_update_interval_sec * 1e3);
-    std::cout << "[INFO] Vehicle visualizer updater started. Updated every " << vizParams.opts_ptr->vehviz_update_interval_sec << " seconds." << std::endl;
+    LogInfo("Vehicle visualizer updater started. Updated every " << vizParams.opts_ptr->vehviz_update_interval_sec << " seconds.")
 
     if (tmr.start() == false)
     {
-        std::cerr << "[ERROR] Fatal error! Cannot create timer for the Vehicle Visualizer update thread!" << std::endl;
+        LogFatal("Fatal error! Cannot create timer for the Vehicle Visualizer update thread!")
         terminatorFlag = true;
         pthread_exit(nullptr);
     }
@@ -229,53 +230,22 @@ void VehVizUpdater_callback(const vizOptions_t &vizParams)
 
     if (terminatorFlag == true)
     {
-        std::cerr << "[WARN] Vehicle visualizer updater terminated due to error." << std::endl;
+        LogWarning("ehicle visualizer updater terminated due to error.")
     }
 
     pthread_exit(nullptr);
 }
 
-int main(int argc, char **argv)
+void autotest()
 {
-    terminatorFlag = false;
-
-    // DB cleaner thread ID
-    pthread_t dbcleaner_tid;
-    // Vehicle visualizer update thread ID
-    pthread_t vehviz_tid;
-    // Thread attributes (unused, for the time being)
-    // pthread_attr_t tattr;
-
-    // First of all, parse the options
-    options_t sldm_opts;
-
-    // Read options from command line
-    options_initialize(&sldm_opts);
-    if (parse_options(argc, argv, &sldm_opts))
-    {
-        fprintf(stderr, "Error while parsing the options with the C options module.\n");
-        exit(EXIT_FAILURE);
-    }
-
-    std::time_t now = std::time(nullptr);
-    fprintf(stdout, "[INFO] The S-LDM started at %.24s, corresponding to GNTimestamp = %lu\n", std::ctime(&now), get_timestamp_ms_gn());
-    fprintf(stdout, "[INFO] S-LDM version: %s\n", VERSION_STR);
-
-    // Print, as an example, the full (internal + external) area covered by the S-LDM
-    std::cout << "This S-LDM instance will cover the full area defined by: [" << sldm_opts.min_lat - sldm_opts.ext_lat_factor << "," << sldm_opts.min_lon - sldm_opts.ext_lon_factor << "],[" << sldm_opts.max_lat + sldm_opts.ext_lat_factor << "," << sldm_opts.max_lon + sldm_opts.ext_lon_factor << "]" << std::endl;
-    if (sldm_opts.cross_border_trigger == true)
-    {
-        std::cout << "Cross-border trigger mode enabled." << std::endl;
-    }
-
-    /* ----------------- TEST AREA (insert here your test code, which will be removed from the final version of main()) ----------------- */
+/* ----------------- TEST AREA (insert here your test code, which will be removed from the final version of main()) ----------------- */
     /* ------------------------------------------------------------------------------------------------------------------------------------ */
     /* ------------------------------------------------------------------------------------------------------------------------------------ */
     /* ------------------------------------------------------------------------------------------------------------------------------------ */
     /* ------------------------------------------------------------------------------------------------------------------------------------ */
     /* ------------------------------------------------------------------------------------------------------------------------------------ */
 
-    std::cout << "*-*-*-*-*-* [INFO] S-LDM startup auto-tests started... *-*-*-*-*-*" << std::endl;
+    LogInfo("*-*-*-*-*-* S-LDM startup auto-tests started... *-*-*-*-*-*")
 
     // Create a new veheicle visualizer object
     // vehicleVisualizer vehicleVisObj;
@@ -345,7 +315,7 @@ int main(int argc, char **argv)
 
     if (decodeFrontend.decodeEtsi((uint8_t *)&denm2_bytes[0], 190, decodedData) != ETSI_DECODER_OK)
     {
-        std::cerr << "Error! Cannot decode ETSI packet!" << std::endl;
+        LogError("Error! Cannot decode ETSI packet!")
     }
 
     if (decodedData.type == etsiDecoder::ETSI_DECODED_CAM)
@@ -354,11 +324,10 @@ int main(int argc, char **argv)
 
         decoded_cam = (CAM_t *)decodedData.decoded_msg;
 
-        printf("GNTimestamp: %u\n", decodedData.gnTimestamp);
+        LogInfo("GNTimestamp: " << decodedData.gnTimestamp)
 
-        printf("Lat: %.7lf, Lon: %.7lf\n",
-               (double)decoded_cam->cam.camParameters.basicContainer.referencePosition.latitude / 10000000.0,
-               (double)decoded_cam->cam.camParameters.basicContainer.referencePosition.longitude / 10000000.0);
+        LogInfo("Lat: " << (double)decoded_cam->cam.camParameters.basicContainer.referencePosition.latitude / 10000000.0
+               << ", Lon: " << (double)decoded_cam->cam.camParameters.basicContainer.referencePosition.longitude / 10000000.0)
     }
     else if (decodedData.type == etsiDecoder::ETSI_DECODED_DENM)
     {
@@ -366,14 +335,14 @@ int main(int argc, char **argv)
 
         decoded_denm = (DENM_t *)decodedData.decoded_msg;
 
-        printf("GNTimestamp: %u\n", decodedData.gnTimestamp);
+        LogInfo("GNTimestamp: " << decodedData.gnTimestamp)
 
-        printf("GeoArea: \nLat: %.7lf, Lon: %.7lf, DistA %u, DistB %u, Angle %u\n",
-               (double)decodedData.posLat / 10000000.0,
-               (double)decodedData.posLong / 10000000.0,
-               decodedData.distA,
-               decodedData.distB,
-               decodedData.angle);
+        LogInfo("GeoArea: "
+            << " Lat: " << (double)decodedData.posLat / 10000000.0
+            << ", Lon: " << (double)decodedData.posLong / 10000000.0
+            << ", DistA: " << decodedData.distA
+            << ", DistB: " << decodedData.distB
+            << ", Angle: " << decodedData.angle)
     }
 
     // Test with a db
@@ -381,28 +350,28 @@ int main(int argc, char **argv)
     ldmmap::vehicleData_t veh1 = {.stationID = 188321312, .lat = 45.562149, .lon = 8.055311, .elevation = 440, .heading = 120, .speed_ms = 17, .gnTimestamp = 34235235235, .timestamp_us = 0};
     veh1.timestamp_us = get_timestamp_us(); // now
     dbtest.insert(veh1);
-    std::printf("Test vehicle 1 inserted @ %lu\n", veh1.timestamp_us);
+    LogInfo("Test vehicle 1 inserted @ " << veh1.timestamp_us)
 
     ldmmap::vehicleData_t veh2 = {.stationID = 288321312, .lat = 45.512149, .lon = 8.355311, .elevation = 440, .heading = 100, .speed_ms = 17, .gnTimestamp = 34235235235, .timestamp_us = 0};
     veh2.timestamp_us = get_timestamp_us() - 2 * 1e6; // 2 seconds ago
     dbtest.insert(veh2);
-    std::printf("Test vehicle 2 inserted @ %lu\n", veh2.timestamp_us);
+    LogInfo("Test vehicle 2 inserted @ " << veh2.timestamp_us)
 
     ldmmap::vehicleData_t veh3 = {.stationID = 388321312, .lat = 45.592149, .lon = 8.855311, .elevation = 440, .heading = 80, .speed_ms = 17, .gnTimestamp = 34235235235, .timestamp_us = 0};
     veh3.timestamp_us = get_timestamp_us() - 5 * 1e6; // 5 seconds ago
     dbtest.insert(veh3);
-    std::printf("Test vehicle 3 inserted @ %lu\n", veh3.timestamp_us);
+    LogInfo("Test vehicle 3 inserted @ " << veh3.timestamp_us)
 
     ldmmap::vehicleData_t veh4 = {.stationID = 488321312, .lat = 45.362149, .lon = 8.755311, .elevation = 440, .heading = 10, .speed_ms = 17, .gnTimestamp = 34235235235, .timestamp_us = 0};
     veh4.timestamp_us = get_timestamp_us() - 7 * 1e6; // 7 seconds ago
     dbtest.insert(veh4);
-    std::printf("Test vehicle 4 inserted @ %lu\n", veh4.timestamp_us);
+    LogInfo("Test vehicle 4 inserted @ " << veh4.timestamp_us)
 
     // Print all the contents of the test DB (should be equal to 4)
     dbtest.printAllContents("Before deletion");
 
     // Print the size of the test DB
-    std::cout << "Number of elements stored in the LDMMap DB: " << dbtest.getCardinality() << std::endl;
+    LogInfo ("Number of elements stored in the LDMMap DB: " << dbtest.getCardinality())
 
     // Delete now all the vehicles older than 5.5 seconds
     dbtest.deleteOlderThan(5500); // Only 188321312, 288321312 and 388321312 should remain in the DB
@@ -411,13 +380,45 @@ int main(int argc, char **argv)
     dbtest.printAllContents("After deletion");
 
     // Print the size of the test DB again (should be equal to 3)
-    std::cout << "Number of elements stored in the LDMMap DB: " << dbtest.getCardinality() << std::endl;
+    LogInfo("Number of elements stored in the LDMMap DB: " << dbtest.getCardinality())
 
     dbtest.setCentralLatLon(45.562149, 8.055311); // Set a central lat lon for testing the visualizer thread
 
-    dbtest.clear();
+    //dbtest.clear();
 
-    std::cout << "*-*-*-*-*-* [INFO] S-LDM startup auto-tests terminated. The S-LDM will start now. *-*-*-*-*-*" << std::endl;
+    LogInfo("*-*-*-*-*-* S-LDM startup auto-tests terminated. The S-LDM will start now. *-*-*-*-*-*")
+}
+
+int main(int argc, char **argv)
+{
+    terminatorFlag = false;
+
+    // Thread attributes (unused, for the time being)
+    // pthread_attr_t tattr;
+
+    // First of all, parse the options
+    options_t sldm_opts;
+
+    // Read options from command line
+    options_initialize(&sldm_opts);
+    if (parse_options(argc, argv, &sldm_opts))
+    {
+        LogError("Error while parsing the options with the C options module.")
+        exit(EXIT_FAILURE);
+    }
+
+    const auto now = std::time(nullptr);
+
+    LogInfo("The S-LDM started at " << std::ctime(&now))
+    LogInfo("corresponding to GNTimestamp = " << get_timestamp_ms_gn())
+    LogInfo("S-LDM version: " << VERSION_STR)
+
+    // Print, as an example, the full (internal + external) area covered by the S-LDM
+    LogInfo("This S-LDM instance will cover the full area defined by: [" << sldm_opts.min_lat - sldm_opts.ext_lat_factor << "," << sldm_opts.min_lon - sldm_opts.ext_lon_factor << "],[" << sldm_opts.max_lat + sldm_opts.ext_lat_factor << "," << sldm_opts.max_lon + sldm_opts.ext_lon_factor << "]")
+    if (sldm_opts.cross_border_trigger == true)
+    {
+        LogInfo("Cross-border trigger mode enabled.")
+    }
 
     /* ------------------------------------------------------------------------------------------------------------------------------------ */
     /* ------------------------------------------------------------------------------------------------------------------------------------ */
@@ -426,7 +427,7 @@ int main(int argc, char **argv)
     /* ------------------------------------------------------------------------------------------------------------------------------------ */
 
     // Create a new DB object
-    auto db_ptr =std::shared_ptr<ldmmap::LDMMap>();
+    auto db_ptr =LDMMapPtr();
 
     // Set a central latitude and longitude depending on the coverage area of the S-LDM (to be used only for visualization purposes -
     // - it does not affect in any way the performance or the operations of the LDMMap DB module)
@@ -434,18 +435,14 @@ int main(int argc, char **argv)
 
     // Before starting the AMQP client event loop, we should create a parallel thread, reading periodically
     // (e.g. every 5 s) the database through the pointer "db_ptr" and "cleaning" the entries which are too old
-    // pthread_attr_init(&tattr);
-    // pthread_attr_setdetachstate(&tattr,PTHREAD_CREATE_DETACHED);
-    //pthread_create(&dbcleaner_tid, nullptr, DBcleaner_callback, (void *)db_ptr.get());
-    std::thread([ db_ptr](){
+    auto dbCleanerThread = std::thread([db_ptr](){
         DBcleaner_callback(db_ptr);
     });
 
     // We should also start here a second parallel thread, reading periodically the database (e.g. every 500 ms) and sending the vehicle data to
     // the vehicleVisualizer
-
     vizOptions_t vizParams = {db_ptr, &sldm_opts};
-    std::thread([ vizParams](){
+    auto vehVizThread = std::thread([ vizParams](){
         VehVizUpdater_callback(vizParams);
     });
 
@@ -523,6 +520,7 @@ int main(int argc, char **argv)
     // Create the main AMQP client object
     AMQPClient mainRecvClient(std::string(options_string_pop(sldm_opts.amqp_broker_one.broker_url)), std::string(options_string_pop(sldm_opts.amqp_broker_one.broker_topic)), sldm_opts.min_lat, sldm_opts.max_lat, sldm_opts.min_lon, sldm_opts.max_lon, &sldm_opts, db_ptr, logfile_name);
 
+
     // Create the JSONserver object for the on-demand JSON-over-TCP interface
     JSONserver jsonsrv(db_ptr);
 
@@ -532,7 +530,7 @@ int main(int argc, char **argv)
         jsonsrv.setServerPort(sldm_opts.od_json_interface_port);
         if (jsonsrv.startServer() != true)
         {
-            fprintf(stderr, "Critical error: cannot start the JSON server for data retrieval from other services.\n");
+            LogFatal("Critical error: cannot start the JSON server for data retrieval from other services.")
             exit(EXIT_FAILURE);
         }
     }
@@ -542,7 +540,7 @@ int main(int argc, char **argv)
 
     if (sldm_opts.num_amqp_x_enabled > 0)
     {
-        std::cout << "[INFO] Additional AMQP clients will be used by the current instance of the S-LDM. Total number of AMQP clients (including the main one): " << sldm_opts.num_amqp_x_enabled + 1 << std::endl;
+        LogInfo("Additional AMQP clients will be used by the current instance of the S-LDM. Total number of AMQP clients (including the main one): " << sldm_opts.num_amqp_x_enabled + 1)
 
         for (unsigned int i = 0; i < sldm_opts.num_amqp_x_enabled; i++)
         {
@@ -553,7 +551,7 @@ int main(int argc, char **argv)
 
     if (sldm_opts.amqp_broker_one.amqp_reconnect_after_local_timeout_expired == true)
     {
-        std::cout << "[AMQPClient 1] This client will be restarted if a local idle timeout error occurs." << std::endl;
+        LogInfo("[AMQPClient 1] This client will be restarted if a local idle timeout error occurs.")
     }
 
     // If this flag is set to true, the client will be restarted after an error, instead of being terminated
@@ -602,8 +600,8 @@ int main(int argc, char **argv)
         {
             if (sldm_opts.amqp_broker_one.amqp_reconnect_after_local_timeout_expired == true && std::string(e.what()) == "amqp:resource-limit-exceeded: local-idle-timeout expired")
             {
-                std::cerr << "[AMQPClient 1] Exception occurred: " << e.what() << std::endl;
-                std::cout << "[AMQPClient 1] Attempting to restart the client after a local idle timeout expired error..." << std::endl;
+                LogError("[AMQPClient 1] Exception occurred: " << e.what())
+                LogInfo("[AMQPClient 1] Attempting to restart the client after a local idle timeout expired error...")
                 mainRecvClient.force_container_stop();
                 sleep(1);
                 cli_restart = true;
@@ -616,17 +614,17 @@ int main(int argc, char **argv)
         }
     } while (cli_restart == true);
 
-    pthread_join(dbcleaner_tid, nullptr);
-    pthread_join(vehviz_tid, nullptr);
+    dbCleanerThread.join();
+    vehVizThread.join();
 
     if (sldm_opts.num_amqp_x_enabled > 0)
     {
-        fprintf(stdout, "[INFO] Terminating the other AMQP clients...\n");
+        LogInfo("Terminating the other AMQP clients...")
         // Close the connection on all the other brokers (if multiple clients are used)
         amqpclimutex.lock();
         for (auto const &[key, val] : amqpclimap)
         {
-            fprintf(stdout, "[INFO] Terminating client %d...\n", key + 2);
+            LogInfo("Terminating client " << key + 2)
             val->force_container_stop();
         }
         amqpclimutex.unlock();

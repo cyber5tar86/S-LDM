@@ -79,7 +79,7 @@ public:
      * 
      * @param db_ptr 
      */
-    JSONserver(const std::shared_ptr<ldmmap::LDMMap> &db) :
+    JSONserver(const LDMMapPtr &db) :
         m_db(db)
     {};
 
@@ -89,7 +89,7 @@ public:
      * @param db_ptr 
      * @param port 
      */
-    JSONserver(const std::shared_ptr<ldmmap::LDMMap> &db, long port) :
+    JSONserver(const LDMMapPtr &db, long port) :
         m_db(db),
         m_port(port)
     {};
@@ -227,7 +227,7 @@ private:
     double m_range_m{DefaultValues::RANGE_M};
 
     /** @brief */
-    std::shared_ptr<ldmmap::LDMMap> m_db{nullptr};
+    LDMMapPtr m_db{nullptr};
 
     /** @brief */
     long m_port{DefaultValues::PORT};

@@ -1,13 +1,26 @@
 {
     "configurations": [
         {
-            "name": "x86_64",
+            "name": "x86_64 - release",
+            "intelliSenseMode": "gcc-x64",
             "includePath": [
                 "${workspaceFolder}/**"
             ],
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "c17",
             "cppStandard": "c++17",
+            "compileCommands": "${workspaceFolder}/build/Release/compile_commands.json"
+        },
+        {
+            "name": "x86_64 - debug",
             "intelliSenseMode": "gcc-x64",
-            "compileCommands": "${workspaceFolder}/s-ldm/build/compile_commands.json"
+            "includePath": [
+                "${workspaceFolder}/**"
+            ],
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "compileCommands": "${workspaceFolder}/build/Debug/compile_commands.json"
         }
     ],
     "version": 4

@@ -17,7 +17,7 @@
 class ManeuveringServiceRestClient
 {
 public:
-    // ManeuveringServiceRestClient(double lat, double lon, uint64_t refVehStationID, const std::shared_ptr<ldmmap::LDMMap> &db) :
+    // ManeuveringServiceRestClient(double lat, double lon, uint64_t refVehStationID, const LDMMapPtr &db) :
     //     m_range_m(m_range_m_default),
     //     m_db_ptr(db_ptr),
     //     m_lat(lat),
@@ -36,7 +36,7 @@ public:
      * @param refVehStationID 
      * @param db_ptr 
      */
-    ManeuveringServiceRestClient(uint64_t refVehStationID, const std::shared_ptr<ldmmap::LDMMap> &db) :
+    ManeuveringServiceRestClient(uint64_t refVehStationID, const LDMMapPtr &db) :
         m_refVehStationID(refVehStationID),
         m_db(db)
     {};
@@ -49,7 +49,7 @@ public:
      * @param address 
      * @param port 
      */
-    ManeuveringServiceRestClient(uint64_t refVehStationID, const std::shared_ptr<ldmmap::LDMMap> &db, std::string address, long port) :
+    ManeuveringServiceRestClient(uint64_t refVehStationID, const LDMMapPtr &db, std::string address, long port) :
         m_refVehStationID(refVehStationID),
         m_db(db),
         m_srv_addr{address},
@@ -259,7 +259,7 @@ private:
     double m_range_m;
 
     /** @brief */
-    std::shared_ptr<ldmmap::LDMMap> m_db{nullptr};
+    LDMMapPtr m_db{nullptr};
 
     /** @brief */
     std::string m_srv_addr{DefaultValues::SRV_ADDR};

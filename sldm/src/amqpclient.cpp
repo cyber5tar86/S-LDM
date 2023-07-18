@@ -1,8 +1,19 @@
+/**
+ * @file amqpclient.cpp
+ * @author your name (you@domain.com)
+ * @brief 
+ * @version 0.1
+ * @date 2023-07-18
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
 #include <fstream>
 #include <iomanip>
 #include <proton/reconnect_options.hpp>
 #include <time.h>
 #include "amqpclient.h"
+#include "log.h"
 #include "quadkeyts.h"
 #include "utils.h"
 
@@ -17,7 +28,8 @@ namespace
 // specifically an APACHE.ORG:SELECTOR
 // (http://www.amqp.org/specification/1.0/filters)
 
-void set_filter(proton::source_options &opts, const std::string &selector_str)
+void
+set_filter(proton::source_options &opts, const std::string &selector_str)
 {
 
     proton::source::filter_map map;
@@ -49,10 +61,10 @@ inline ldmmap::OptionalDataItem<uint8_t>
 AMQPClient::manage_LowfreqContainer(CAM_t *decoded_cam, uint32_t stationID)
 {
 
-    if (decoded_cam->cam.camParameters.lowFrequencyContainer != NULL)
+    if (decoded_cam->cam.camParameters.lowFrequencyContainer != nullptr)
     {
         // In any normal, uncorrupted CAM, buf should never be NULL and it should contain at least one element (i.e. buf[0] always exists)
-        if (decoded_cam->cam.camParameters.lowFrequencyContainer->choice.basicVehicleContainerLowFrequency.exteriorLights.buf != NULL)
+        if (decoded_cam->cam.camParameters.lowFrequencyContainer->choice.basicVehicleContainerLowFrequency.exteriorLights.buf != nullptr)
         {
             return ldmmap::OptionalDataItem<uint8_t>(decoded_cam->cam.camParameters.lowFrequencyContainer->choice.basicVehicleContainerLowFrequency.exteriorLights.buf[0]);
         }
@@ -66,7 +78,7 @@ AMQPClient::manage_LowfreqContainer(CAM_t *decoded_cam, uint32_t stationID)
     {
         ldmmap::LDMMap::returnedVehicleData_t retveh;
 
-        if (m_db_ptr->lookup(stationID, retveh) == ldmmap::LDMMap::LDMMAP_OK)
+        if (m_db->lookup(stationID, retveh) == ldmmap::LDMMap::LDMMap_error_t::LDMMAP_OK)
         {
             return retveh.vehData.exteriorLights;
         }
@@ -77,7 +89,8 @@ AMQPClient::manage_LowfreqContainer(CAM_t *decoded_cam, uint32_t stationID)
     }
 }
 
-void AMQPClient::on_connection_open(proton::connection &conn)
+void
+AMQPClient::on_connection_open(proton::connection &conn)
 {
     if (m_logfile_name != "" && m_logfile_file != nullptr)
     {
@@ -86,7 +99,8 @@ void AMQPClient::on_connection_open(proton::connection &conn)
     }
 }
 
-void AMQPClient::on_connection_close(proton::connection &conn)
+void
+AMQPClient::on_connection_close(proton::connection &conn)
 {
     if (m_logfile_name != "" && m_logfile_file != nullptr)
     {
@@ -95,7 +109,8 @@ void AMQPClient::on_connection_close(proton::connection &conn)
     }
 }
 
-void AMQPClient::on_container_start(proton::container &c)
+void
+AMQPClient::on_container_start(proton::container &c)
 {
     m_cont.store(&c);
 
@@ -113,7 +128,7 @@ void AMQPClient::on_container_start(proton::container &c)
         co.user(m_username);
         co_set = true;
 
-        std::cout << "[AMQPClient " << m_client_id.c_str() << "] AMQP username successfully set: " << m_username << std::endl;
+        LogInfo(mLogTag << "clientId: " << m_client_id.c_str() << " - AMQP username successfully set: " << m_username)
     }
 
     if (!m_password.empty())
@@ -362,7 +377,8 @@ void AMQPClient::on_container_start(proton::container &c)
     }
 }
 
-void AMQPClient::on_message(proton::delivery &d, proton::message &msg)
+void
+AMQPClient::on_message(proton::delivery &d, proton::message &msg)
 {
 
     uint64_t on_msg_timestamp_us = get_timestamp_us();
@@ -402,7 +418,7 @@ void AMQPClient::on_message(proton::delivery &d, proton::message &msg)
         // This message should be ignored
         if (m_printMsg == true)
         {
-            std::cerr << "Error: received a message in a non-binary AMQP type." << std::endl;
+            LogError("received a message in a non-binary AMQP type.")
         }
         return;
     }
@@ -416,7 +432,7 @@ void AMQPClient::on_message(proton::delivery &d, proton::message &msg)
     // m_decodeFrontend.setPrintPacket(true); // <- uncomment to print the bytes of each received message. Should be used for debug only, and should be kept disabled when deploying the S-LDM.
     if (m_decodeFrontend.decodeEtsi(message_bin_buf, message_bin.size(), decodedData, etsiDecoder::decoderFrontend::MSGTYPE_AUTO) != ETSI_DECODER_OK)
     {
-        std::cerr << "Error! Cannot decode ETSI packet!" << std::endl;
+        LogError("Error! Cannot decode ETSI packet!")
         return;
     }
 
@@ -548,7 +564,7 @@ void AMQPClient::on_message(proton::delivery &d, proton::message &msg)
         {
             ldmmap::LDMMap::returnedVehicleData_t retveh;
 
-            if (m_db_ptr->lookup(stationID, retveh) == ldmmap::LDMMap::LDMMAP_OK)
+            if (m_db->lookup(stationID, retveh) == ldmmap::LDMMap::LDMMap_error_t::LDMMAP_OK)
             {
                 // According to the standard: GNTimestamp = (TAI timestamp since 2004-01-01 00:00:00) % 4294967296
                 // Due to the modulo operation, it is not enough to consider the difference between the received GNTimestamp and the one
@@ -665,7 +681,7 @@ void AMQPClient::on_message(proton::delivery &d, proton::message &msg)
         {
             ldmmap::LDMMap::returnedVehicleData_t retveh;
 
-            if (m_db_ptr->lookup(stationID, retveh) == ldmmap::LDMMap::LDMMAP_OK)
+            if (m_db->lookup(stationID, retveh) == ldmmap::LDMMap::LDMMap_error_t::LDMMAP_OK)
             {
                 l_inst_period = (get_timestamp_us() - retveh.vehData.timestamp_us) / 1000.0;
             }
@@ -677,11 +693,11 @@ void AMQPClient::on_message(proton::delivery &d, proton::message &msg)
 
         // std::cout << "[DEBUG] Updating vehicle with stationID: " << vehdata.stationID << std::endl;
 
-        db_retval = m_db_ptr->insert(vehdata);
+        db_retval = m_db->insert(vehdata);
 
-        if (db_retval != ldmmap::LDMMap::LDMMAP_OK && db_retval != ldmmap::LDMMap::LDMMAP_UPDATED)
+        if (db_retval != ldmmap::LDMMap::LDMMap_error_t::LDMMAP_OK && db_retval != ldmmap::LDMMap::LDMMap_error_t::LDMMAP_UPDATED)
         {
-            std::cerr << "Warning! Insert on the database for vehicle " << (int)stationID << "failed!" << std::endl;
+            LogError("Warning! Insert on the database for vehicle " << (int)stationID << "failed!")
         }
 
         if (m_logfile_name != "")
@@ -711,7 +727,7 @@ void AMQPClient::on_message(proton::delivery &d, proton::message &msg)
                 {
                     if (vehdata.stationType == ldmmap::StationType_LDM_passengerCar)
                     {
-                        if (m_indicatorTrgMan_ptr->checkAndTrigger(lat, lon, stationID, vehdata.exteriorLights.getData()) == true)
+                        if (m_indicatorTrgMan->checkAndTrigger(lat, lon, stationID, vehdata.exteriorLights.getData()) == true)
                         {
                             std::cout << "[TRIGGER] Triggering condition detected!" << std::endl;
                         }
@@ -720,7 +736,7 @@ void AMQPClient::on_message(proton::delivery &d, proton::message &msg)
                 else
                 {
                     // if the interop-hijack is NOT enabled, trigger no matter the vehicleType
-                    if (m_indicatorTrgMan_ptr->checkAndTrigger(lat, lon, stationID, vehdata.exteriorLights.getData()) == true)
+                    if (m_indicatorTrgMan->checkAndTrigger(lat, lon, stationID, vehdata.exteriorLights.getData()) == true)
                     {
                         std::cout << "[TRIGGER] Triggering condition detected!" << std::endl;
                     }
@@ -728,51 +744,56 @@ void AMQPClient::on_message(proton::delivery &d, proton::message &msg)
             }
         }
 
+        //TODO: 3 logger should be configured, 1 for console, 1 file, 1 for specific data on file
         if (m_logfile_name != "")
         {
             af = get_timestamp_ns();
-
-            fprintf(m_logfile_file, "[LOG - TRIGGER CHECK (Client %s)] TriggerEnabled=%d ExteriorLightsAvail=%d CrossBrdTriggerMode=%d IsInsideInternalArea=%d ProcTimeMilliseconds=%.6lf\n",
-                    m_client_id.c_str(),
-                    m_indicatorTrgMan_enabled,
-                    vehdata.exteriorLights.isAvailable(),
-                    m_opts_ptr->cross_border_trigger,
-                    m_areaFilter.isInsideInternal(lat, lon),
-                    (af - bf) / 1000000.0);
+            auto triggerData = nlohmann::json{
+                {"clientID", m_client_id},
+                {"triggerEnabled", m_indicatorTrgMan_enabled},
+                {"exteriorLightsAvail", vehdata.exteriorLights.isAvailable()},
+                {"crossBrdTriggerMode", m_opts_ptr->cross_border_trigger},
+                {"isInsideInternalArea", m_areaFilter.isInsideInternal(lat, lon)},
+                {"procTimeMilliseconds", (af - bf) / 1000000.0},
+            };
+            LogDebug(mLogTag << "TRIGGER CHECK - " << triggerData)
         }
 
         ASN_STRUCT_FREE(asn_DEF_CAM, decoded_cam);
 
+        //TODO: 3 logger should be configured, 1 for console, 1 file, 1 for specific data on file
         if (m_logfile_name != "")
         {
             main_af = get_timestamp_ns();
-
-            logfprintf(m_logfile_file, std::string("FULL CAM PROCESSING (Client") + m_client_id + std::string(")"), "StationID=%u StationTypeID=%d Coordinates=%.7lf:%.7lf Heading=%.1lf InstUpdatePeriod=%.3lf"
-                                                                                                                    " CAMTimestamp=%ld GNTimestamp=%lu CAMTimestampDiff=%ld GNTimestampDiff=%ld"
-                                                                                                                    " ProcTimeMilliseconds=%.6lf Cardinality=%d\n",
-                       stationID, static_cast<int>(vehdata.stationType), lat, lon,
-                       vehdata.heading,
-                       l_inst_period,
-                       vehdata.camTimestamp, vehdata.gnTimestamp, get_timestamp_ms_cam() - vehdata.camTimestamp, get_timestamp_ms_gn() - vehdata.gnTimestamp,
-                       (main_af - main_bf) / 1000000.0, m_db_ptr->getCardinality());
-
-            // fprintf(m_logfile_file,"[LOG - FULL CAM PROCESSING] StationID=%u Coordinates=%.7lf:%.7lf InstUpdatePeriod=%.3lf"
-            // 	" CAMTimestamp=%ld GNTimestamp=%lu CAMTimestampDiff=%ld GNTimestampDiff=%ld"
-            // 	" ProcTimeMilliseconds=%.6lf\n",
-            // 	stationID,lat,lon,
-            // 	l_inst_period,
-            // 	vehdata.camTimestamp,vehdata.gnTimestamp,get_timestamp_ms_cam()-vehdata.camTimestamp,get_timestamp_ms_gn()-vehdata.gnTimestamp,
-            // 	(main_af-main_bf)/1000000.0);
+            auto infoData=nlohmann::json{
+                {"clientID", m_client_id},
+                {"stationID", stationID},
+                {"stationTypeID", vehdata.stationType},
+                {"coordinates", {
+                    {"lat", lat},
+                    {"lon", lon}
+                }},
+                {"heading", vehdata.heading},
+                {"instaUpdatePeriod", l_inst_period},
+                {"camTimestamp", vehdata.camTimestamp},
+                {"gnTimestamp", vehdata.gnTimestamp},
+                {"camTimestampDiff", get_timestamp_ms_cam() - vehdata.camTimestamp},
+                {"gnTimestampDiff", get_timestamp_ms_gn() - vehdata.gnTimestamp},
+                {"procTimeMilliseconds", (main_af - main_bf) / 1000000.0},
+                {"cardinality",  m_db->getCardinality()},
+            };
+            LogDebug(mLogTag << "FULL CAM PROCESSING - " << infoData)
         }
     }
     else
     {
-        std::cerr << "Warning! Only CAM messages are supported for the time being!" << std::endl;
+        LogError("Warning! Only CAM messages are supported for the time being!")
         return;
     }
 }
 
-void AMQPClient::on_container_stop(proton::container &c)
+void
+AMQPClient::on_container_stop(proton::container &c)
 {
     if (m_logfile_name != "" && m_logfile_name != "stdout")
     {

@@ -1,0 +1,24 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build - [x86_64]",
+            "type": "shell",
+            "command": ["/bin/bash build.sh x86_64"],
+            "presentation": { "clear": true }
+        },
+        {
+            "label": "Coverage - [x86_64]",
+            "type": "shell",
+            "command": ["/usr/bin/cmake --build build.x86_64 --target mistlib_coverage"],
+            "dependsOn": [ "Build - [x86_64]" ],
+            "presentation": { "clear": true }
+        },
+        {
+            "label": "Clean - [x86_64]",
+            "type": "shell",
+            "command": ["/bin/bash clean.sh x86_64"],
+            "presentation": { "clear": true }
+        }
+    ]
+}

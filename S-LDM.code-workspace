@@ -1,0 +1,12 @@
+{
+    "folders": [
+        {
+            "name": "S-LDM Project",
+            "path": "."
+        },
+        {
+            "name": "S-LDM backend",
+            "path": "./sldm"
+        }
+    ]
+}

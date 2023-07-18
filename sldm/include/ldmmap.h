@@ -19,6 +19,13 @@
 #include "phpoints.h"
 #include "vehicledatadef.h"
 
+/**
+ * @brief 
+ * 
+ */
+class ldmmap::LDMMap;
+using LDMMapPtr = std::shared_ptr<ldmmap::LDMMap>;
+
 namespace ldmmap
 {
 
@@ -34,29 +41,28 @@ public:
      * @brief 
      * 
      */
-    typedef enum
+    enum class LDMMap_error_t: uint8_t
     {
-        LDMMAP_OK,              /*! < */
-        LDMMAP_UPDATED,         /*! < */
-        LDMMAP_ITEM_NOT_FOUND,  /*! < */
-        LDMMAP_MAP_FULL,        /*! < */
-        LDMMAP_UNKNOWN_ERROR    /*! < */
-    } LDMMap_error_t;
+        LDMMAP_OK = 0,          //! < 
+        LDMMAP_UPDATED,         //! < 
+        LDMMAP_ITEM_NOT_FOUND,  //! < 
+        LDMMAP_MAP_FULL,        //! < 
+        LDMMAP_UNKNOWN_ERROR    //! < 
+    } ;
 
     /**
      * @brief 
      * 
      */
-    typedef struct
+    using returnedVehicleData_t = struct
     {
         /*! @brief */
         vehicleData_t vehData;
 
         /*! @brief */
         std::shared_ptr<PHpoints> phData;
-    } returnedVehicleData_t;
+    };
 
-public:
     /**
      * @brief Construct a new LDMMap object
      * 
@@ -202,9 +208,9 @@ public:
     /**
      * @brief Get the Cardinality object
      * 
-     * @return int 
+     * @return uint64_t 
      */
-    int getCardinality()
+    uint64_t getCardinality() const
     {
         return m_card;
     };

@@ -1,5 +1,15 @@
-#ifndef TRIGGERMAN_H
-#define TRIGGERMAN_H
+/**
+ * @file triggermanager.h
+ * @author your name (you@domain.com)
+ * @brief 
+ * @version 0.1
+ * @date 2023-07-18
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
+#ifndef TRIGGERMANAGER_H
+#define TRIGGERMANAGER_H
 
 #include <mutex>
 #include <list>
@@ -11,11 +21,14 @@ extern "C"
 #include "options.h"
 }
 
+class IndicatorTriggerManager;
+using IndicatorTriggerManagerPtr = std::shared_ptr<IndicatorTriggerManager>;
+
 /**
  * @brief Simple, indicator-based, trigger manager
  * 
  */
-class indicatorTriggerManager
+class IndicatorTriggerManager
 {
 public:
     /**
@@ -24,12 +37,12 @@ public:
      * @param db_ptr 
      * @param opts_ptr 
      */
-    indicatorTriggerManager(const std::shared_ptr<ldmmap::LDMMap> &db, options_t *opts) :
+    IndicatorTriggerManager(const LDMMapPtr &db, options_t *opts) :
         m_db(db),
         m_opts(opts)
     {}
 
-    void setDBpointer(const std::shared_ptr<ldmmap::LDMMap> &db)
+    void setDBpointer(const LDMMapPtr &db)
     {
         m_db = db;
     }
@@ -70,7 +83,7 @@ protected:
 
 private:
     /*! @brief */
-    std::shared_ptr<ldmmap::LDMMap> m_db{nullptr};
+    LDMMapPtr m_db{nullptr};
 
     /*! @brief */
     options_t *m_opts{nullptr};
@@ -79,4 +92,4 @@ private:
     bool m_left_indicator_enabled{false};
 };
 
-#endif // TRIGGERMAN_H
+#endif // TRIGGERMANAGER_H

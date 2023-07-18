@@ -1,6 +1,8 @@
 #include <cmath>
 #include <iostream>
+#include <sstream>
 #include "ldmmap.h"
+#include "log.h"
 #include "utils.h"
 
 #define DEFINE_KEYS(k_up, k_low, stationID)  \
@@ -82,7 +84,7 @@ namespace ldmmap
             }
         }
 
-        // std::cout << "Updating vehicle: " << newVehicleData.stationID << std::endl;
+        // LogInfo("Updating vehicle: " << newVehicleData.stationID)
         m_ldmmap[key_upper].second[key_lower].phData->insert(newVehicleData);
 
         return retval;
@@ -272,7 +274,8 @@ namespace ldmmap
     void
     LDMMap::printAllContents(std::string label)
     {
-        std::cout << "[" << label << "] Vehicle IDs: ";
+        std::stringstream s;
+        s << "[" << label << "] Vehicle IDs: ";
 
         std::shared_lock<std::shared_mutex> lk(m_mainmapmut);
 
@@ -283,13 +286,15 @@ namespace ldmmap
 
             for (auto const &[keyl, vall] : val.second)
             {
-                std::cout << vall.vehData.stationID << ", ";
+                s << vall.vehData.stationID << ", ";
             }
 
             val.first->unlock_shared();
         }
 
-        std::cout << std::endl;
+        s << std::endl;
+
+        LogInfo(s.str())
     }
 
     void
