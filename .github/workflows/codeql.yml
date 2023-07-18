@@ -18,7 +18,7 @@ on:
     # The branches below must be a subset of the branches above
     branches: [ "main" ]
   schedule:
-    - cron: '18 1 * * 0'
+    - cron: '36 0 * * 1'
 
 jobs:
   analyze:
@@ -63,8 +63,16 @@ jobs:
 
     # Autobuild attempts to build any compiled languages (C/C++, C#, Go, Java, or Swift).
     # If this step fails, then you should remove it and run the build manually (see below)
-    - name: Autobuild
-      uses: github/codeql-action/autobuild@v2
+    #- name: Autobuild
+    #  uses: github/codeql-action/autobuild@v2
+
+    - name: Get Conan
+      # You may pin to the exact commit or the version.
+      # uses: turtlebrowser/get-conan@c171f295f3f507360ee018736a6608731aa2109d
+      uses: turtlebrowser/get-conan@v1.2
+      with:
+        # Wanted conan version
+        version: 1.60
 
     # ℹ️ Command-line programs to run using the OS shell.
     # 📚 See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
@@ -72,9 +80,9 @@ jobs:
     #   If the Autobuild fails above, remove it and uncomment the following three lines.
     #   modify them (or add more) to build your code if your project, please refer to the EXAMPLE below for guidance.
 
-    # - run: |
-    #     echo "Run, Build Application using script"
-    #     ./location_of_script_within_repo/buildscript.sh
+    - run: |
+         echo "Run, Build Application using script"
+         conana build. 
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v2
