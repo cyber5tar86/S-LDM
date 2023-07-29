@@ -16,11 +16,6 @@
 #include <memory>
 #include <nlohmann/json.hpp>
 
-extern "C"
-{
-#include "options.h"
-}
-
 /**
  * @brief 
  * 
@@ -32,8 +27,8 @@ class AreaFilter;
  * @brief 
  * 
  */
-typedef std::shared_ptr<AreaFilterConfiguration> AreaFilterConfigurationPtr;
-typedef std::shared_ptr<AreaFilter> AreaFilterPtr;
+using AreaFilterConfigurationPtr = std::shared_ptr<AreaFilterConfiguration>;
+using AreaFilterPtr = std::shared_ptr<AreaFilter>;
 
 /**
  * @brief 
@@ -168,14 +163,14 @@ private:
  * @brief 
  * 
  */
-class areaFilter
+class AreaFilter
 {
 public:
     /**
      * @brief Construct a new area Filter object
      * 
      */
-    areaFilter();
+    AreaFilter();
 
     /**
      * @brief Construct a new Area Filter object

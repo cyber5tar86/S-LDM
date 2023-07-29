@@ -1,0 +1,22 @@
+{
+    "amqpClientConfiguration": {
+        "username": "",
+        "password": "",
+        "reconnect": true,
+        "allowSasl": true,
+        "allowInsecure": true,
+        "brokerUrl": "",
+        "brokerTopic": "",
+        "brokerQueue": "",
+        "idleTimeout": 1000,
+        "reconnectAfterLocalTimeoutExpired": true
+    },
+    "maneuveringServiceRest": {
+        "address": "http://localhost",
+        "port": 8000,
+        "periodicity": 1.0
+    },
+    "vehicleVisualizer": {
+        "port": 8080
+    }
+}

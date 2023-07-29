@@ -50,15 +50,16 @@ public:
      * @param db_ptr 
      * @param logfile_name 
      */
-    AMQPClient(const std::string &u, const std::string &a, const double &latmin, const double &latmax, const double &lonmin, const double &lonmax, struct options *opts_ptr, const LDMMapPtr &db, std::string logfile_name=std::string()) : 
-        conn_url_(u),
-        addr_(a),
-        max_latitude(latmax),
-        max_longitude(lonmax),
-        min_latitude(latmin),
-        min_longitude(lonmin),
-        m_opts_ptr(opts_ptr),
-        m_db(db)
+    //AMQPClient(const std::string &u, const std::string &a, const double &latmin, const double &latmax, const double &lonmin, const double &lonmax, struct options *opts_ptr, const LDMMapPtr &db, std::string logfile_name=std::string()) : 
+        // conn_url_(u),
+        // addr_(a),
+        // max_latitude(latmax),
+        // max_longitude(lonmax),
+        // min_latitude(latmin),
+        // min_longitude(lonmin),
+        // m_configuration(opts_ptr),
+        // m_db(db)
+    AMQPClient(const AMPQClientConfiguration &configuration, const LDMMapPtr &db)
     {
         m_areaFilter.setOptions(m_opts_ptr);
     }
@@ -228,77 +229,32 @@ public:
 private:
     std::string mLogTag{"[AMQPClient] "};
 
-    /** @brief */
     double max_latitude;
-
-    /** @brief */
     double max_longitude;
-
-    /** @brief */
     double min_latitude;
-
-    /** @brief */
     double min_longitude;
 
     /** @brief If 'true' each received message will be printed (default: 'false' - enable only for debugging purposes) */
     bool m_printMsg{false};
 
-    /** @brief */
-    etsiDecoder::decoderFrontend m_decodeFrontend;
+    etsiDecoder::decoderFrontend m_decodeFrontend;          //!< 
+    AreaFilter m_areaFilter;                                //!< 
+    LDMMapPtr m_db{nullptr};                                //!< 
 
-    //!* @brief
-    areaFilter m_areaFilter;
+    IndicatorTriggerManagerPtr m_indicatorTrgMan{nullptr};  //!< 
+    bool m_indicatorTrgMan_enabled{false};                  //!< 
 
-    //!* @brief
-    struct options *m_opts_ptr;
-
-    //!* @brief
-    LDMMapPtr m_db{nullptr};
-
-    //!* @brief
-    IndicatorTriggerManagerPtr m_indicatorTrgMan{nullptr};
-
-    //!* @brief
-    bool m_indicatorTrgMan_enabled{false};
-
-    //!* @brief
-    std::string m_logfile_name;
-
-    //!* @brief
-    FILE *m_logfile_file{nullptr};
-
-    /** @brief */
-    std::string conn_url_;
-
-    /** @brief */
-    std::string addr_;
-
-    //!* @brief
-    std::string m_username;
-
-    //!* @brief
-    std::string m_password;
-
-    //!* @brief
-    bool m_reconnect{false};
-
-    //!* @brief
-    bool m_allow_sasl{false};
-
-    //!* @brief
-    bool m_allow_insecure{false};
-
-    //!* @brief
-    long m_idle_timeout_ms{-1};
-
-    //!* @brief
-    std::string m_quadKey_filter;
-
-    //!* @brief
-    std::atomic<proton::container *> m_cont{nullptr};
-
-    //!* @brief
-    std::string m_client_id{"unset"};
+    std::string conn_url_;                                  //!< 
+    std::string addr_;                                      //!< 
+    std::string m_username;                                 //!< 
+    std::string m_password;                                 //!< 
+    bool m_reconnect{false};                                //!< 
+    bool m_allow_sasl{false};                               //!< 
+    bool m_allow_insecure{false};                           //!< 
+    long m_idle_timeout_ms{-1};                             //!< 
+    std::string m_quadKey_filter;                           //!< 
+    std::atomic<proton::container *> m_cont{nullptr};       //!< 
+    std::string m_client_id{"unset"};                       //!< 
 };
 
 #endif // SLDM_AMQP_CLIENT_H

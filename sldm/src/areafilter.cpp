@@ -1,15 +1,15 @@
-#include "v2x/facilities/ldm/areafilter.h"
+#include "areafilter.h"
 
 #include <utility>
 
 AreaFilterConfiguration::AreaFilterConfiguration(const nlohmann::json &configuration)
 {
-    FromJson(configuration);
+    fromJson(configuration);
 }
 
 AreaFilterConfiguration::AreaFilterConfiguration(const std::string &configuration)
 {
-    FromString(configuration);
+    fromString(configuration);
 }
 
 double &
@@ -49,13 +49,13 @@ AreaFilterConfiguration::extLonFactor()
 }
 
 std::string
-AreaFilterConfiguration::ToString() const
+AreaFilterConfiguration::toString() const
 {
     return to_string(toJson());
 }
 
 nlohmann::json
-AreaFilterConfiguration::ToJson() const
+AreaFilterConfiguration::toJson() const
 {
     return nlohmann::json{
         {AreaFilterConfigurationKeys::minLat, mMinLat},
@@ -68,13 +68,13 @@ AreaFilterConfiguration::ToJson() const
 }
 
 void
-AreaFilterConfiguration::FromString(const std::string &configuration)
+AreaFilterConfiguration::fromString(const std::string &configuration)
 {
     fromJson(nlohmann::json::parse(configuration));
 }
 
 void
-AreaFilterConfiguration::FromJson(const nlohmann::json &configuration)
+AreaFilterConfiguration::fromJson(const nlohmann::json &configuration)
 {
     mMinLat = configuration.at(AreaFilterConfigurationKeys::minLat);
     mMinLon = configuration.at(AreaFilterConfigurationKeys::minLon);

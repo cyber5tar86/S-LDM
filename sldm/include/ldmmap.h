@@ -19,13 +19,6 @@
 #include "phpoints.h"
 #include "vehicledatadef.h"
 
-/**
- * @brief 
- * 
- */
-class ldmmap::LDMMap;
-using LDMMapPtr = std::shared_ptr<ldmmap::LDMMap>;
-
 namespace ldmmap
 {
 
@@ -237,5 +230,12 @@ private:
 };
 
 } // namespace ldmmap
+
+
+/**
+ * @brief 
+ * 
+ */
+using LDMMapPtr = std::shared_ptr<ldmmap::LDMMap>;
 
 #endif // LDMMAP_H

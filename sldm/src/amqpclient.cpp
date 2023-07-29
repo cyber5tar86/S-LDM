@@ -60,7 +60,6 @@ set_filter(proton::source_options &opts, const std::string &selector_str)
 inline ldmmap::OptionalDataItem<uint8_t>
 AMQPClient::manage_LowfreqContainer(CAM_t *decoded_cam, uint32_t stationID)
 {
-
     if (decoded_cam->cam.camParameters.lowFrequencyContainer != nullptr)
     {
         // In any normal, uncorrupted CAM, buf should never be NULL and it should contain at least one element (i.e. buf[0] always exists)
@@ -704,6 +703,8 @@ AMQPClient::on_message(proton::delivery &d, proton::message &msg)
         {
             af = get_timestamp_ns();
 
+            //TODO: 3 logger should be configured, 1 for console, 1 file, 1 for specific data on file
+            LogDebug(mLogTag << " DATABASE UPDATE (Client " << m_client_id << ")")
             fprintf(m_logfile_file, "[LOG - DATABASE UPDATE (Client %s)] LowFrequencyContainerAvail=%d InsertReturnValue=%d ProcTimeMilliseconds=%.6lf\n",
                     m_client_id.c_str(),
                     decoded_cam->cam.camParameters.highFrequencyContainer.choice.basicVehicleContainerHighFrequency.vehicleWidth != VehicleWidth_unavailable,
@@ -748,7 +749,7 @@ AMQPClient::on_message(proton::delivery &d, proton::message &msg)
         if (m_logfile_name != "")
         {
             af = get_timestamp_ns();
-            auto triggerData = nlohmann::json{
+            nlohmann::json triggerData = {
                 {"clientID", m_client_id},
                 {"triggerEnabled", m_indicatorTrgMan_enabled},
                 {"exteriorLightsAvail", vehdata.exteriorLights.isAvailable()},
@@ -765,7 +766,7 @@ AMQPClient::on_message(proton::delivery &d, proton::message &msg)
         if (m_logfile_name != "")
         {
             main_af = get_timestamp_ns();
-            auto infoData=nlohmann::json{
+            nlohmann::json infoData = {
                 {"clientID", m_client_id},
                 {"stationID", stationID},
                 {"stationTypeID", vehdata.stationType},
@@ -780,7 +781,7 @@ AMQPClient::on_message(proton::delivery &d, proton::message &msg)
                 {"camTimestampDiff", get_timestamp_ms_cam() - vehdata.camTimestamp},
                 {"gnTimestampDiff", get_timestamp_ms_gn() - vehdata.gnTimestamp},
                 {"procTimeMilliseconds", (main_af - main_bf) / 1000000.0},
-                {"cardinality",  m_db->getCardinality()},
+                {"cardinality",  m_db->getCardinality()}
             };
             LogDebug(mLogTag << "FULL CAM PROCESSING - " << infoData)
         }
