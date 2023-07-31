@@ -12,6 +12,7 @@
 #define SLDM_AMQP_CLIENT_H
 
 #include <atomic>
+#include <common/log.h>
 #include <memory>
 #include <proton/connection_options.hpp>
 #include <proton/connection.hpp>
@@ -24,6 +25,7 @@
 #include <proton/tracker.hpp>
 #include <proton/types.hpp>
 
+#include "ampqclientconfiguration.h"
 #include "areafilter.h"
 #include "etsidecoderfrontend.h"
 #include "ldmmap.h"
@@ -37,31 +39,22 @@
 class AMQPClient : public proton::messaging_handler
 {
 public:
+
+    AMQPClient()
+    {
+        log4cplus::NDCContextCreator context(LOG4CPLUS_TEXT("AMQPClient"));
+    }
+
     /**
      * @brief Construct a new AMQPClient object
      * 
-     * @param u 
-     * @param a 
-     * @param latmin 
-     * @param latmax 
-     * @param lonmin 
-     * @param lonmax 
-     * @param opts_ptr 
-     * @param db_ptr 
-     * @param logfile_name 
+     * @param configuration 
+     * @param db 
      */
-    //AMQPClient(const std::string &u, const std::string &a, const double &latmin, const double &latmax, const double &lonmin, const double &lonmax, struct options *opts_ptr, const LDMMapPtr &db, std::string logfile_name=std::string()) : 
-        // conn_url_(u),
-        // addr_(a),
-        // max_latitude(latmax),
-        // max_longitude(lonmax),
-        // min_latitude(latmin),
-        // min_longitude(lonmin),
-        // m_configuration(opts_ptr),
-        // m_db(db)
-    AMQPClient(const AMPQClientConfiguration &configuration, const LDMMapPtr &db)
+    AMQPClient(const AMQPClientConfiguration& amqpClientConfiguration, const AreaFilterConfiguration& areaFilterConfiguration, LDMMapPtr &db) : AMQPClient()
     {
-        m_areaFilter.setOptions(m_opts_ptr);
+        m_areaFilter.setConfiguration(areaFilterConfiguration);
+        m_configuration(amqpClientConfiguration);
     }
 
     /**
@@ -229,14 +222,15 @@ public:
 private:
     std::string mLogTag{"[AMQPClient] "};
 
-    double max_latitude;
-    double max_longitude;
-    double min_latitude;
-    double min_longitude;
+    // double max_latitude;
+    // double max_longitude;
+    // double min_latitude;
+    // double min_longitude;
 
     /** @brief If 'true' each received message will be printed (default: 'false' - enable only for debugging purposes) */
     bool m_printMsg{false};
 
+    AMQPClientConfiguration m_configuration;                //!<
     etsiDecoder::decoderFrontend m_decodeFrontend;          //!< 
     AreaFilter m_areaFilter;                                //!< 
     LDMMapPtr m_db{nullptr};                                //!< 

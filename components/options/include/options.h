@@ -146,14 +146,12 @@
 
 #define DEFAULT_VEHVIZ_NODEJS_UDP_ADDR "127.0.0.1"
 #define DEFAULT_VEHVIZ_NODEJS_UDP_PORT 48110
-
 #define DEFAULT_VEHVIZ_WEB_PORT 8080
+#define DEFAULT_VEHVIZ_UPDATE_INTERVAL_SECONDS 0.5 // Default Vehicle Visualizer web-based GUI update rate, in seconds
 
 #define DEFAULT_CONTEXT_RADIUS_METERS 150.0
 #define MINIMUM_CONTEXT_RADIUS_METERS 10.0
 
-// Default Vehicle Visualizer web-based GUI update rate, in seconds
-#define DEFAULT_VEHVIZ_UPDATE_INTERVAL_SECONDS 0.5
 
 // Maximum number of supported AMQP clients
 #define MAX_ADDITIONAL_AMQP_CLIENTS 10
@@ -186,50 +184,71 @@ typedef struct options
     // = INIT_CODE if 'struct options' has been initialized via options_initialize()
     uint8_t init_code;
 
+    /*
+     * Area Parameters
+     */
     double min_lat;
     double min_lon;
     double max_lat;
     double max_lon;
-
     // Extended area parameters (additive factors to the min/max lat and lon values of the internal area)
     double ext_lat_factor;
     double ext_lon_factor;
 
+    /*
+     * Triggers
+     */
+    bool indicatorTrgMan_enabled; // 'true' if the turn indicator trigger manager is enabled (default option), 'false' otherwise
     bool cross_border_trigger;
-
-    options_string ms_rest_addr;    // Maneuvering Service REST Server address (excluding the port number)
-    long ms_rest_port;              // Maneuvering Service REST Server port
     bool left_indicator_trg_enable; // When this option is set to 'true', the data transmission will be triggered also depending on the left turn indicator, other than considering the right one (which is the default behaviour when this option is 'false')
+
+    /*
+     * Hijacks
+     */
     bool ext_lights_hijack_enable;  // When this options is set to 'true', the information for ext. lights is enabled to be extracted from a highFreqContainer field inside CAMs (to solve version incompatibilities issues), instead of using the correct container
     bool interop_hijack_enable;
-    double ms_rest_periodicity;           // Periodicity at which the REST data should be sent to other services (e.g., the Maneuvering Service)
-    options_string gn_timestamp_property; // Name of the property to check in the amqp header for the gn-timestamp, when decoding messages without GN+BTP in their payloads
 
+    /*
+     * Maneuvering Service REST
+     */
+    options_string ms_rest_addr;    // Maneuvering Service REST Server address (excluding the port number)
+    long ms_rest_port;              // Maneuvering Service REST Server port
+    double ms_rest_periodicity;           // Periodicity at which the REST data should be sent to other services (e.g., the Maneuvering Service)
+
+    /*
+     * Vehicle Visualizer
+     */
     options_string vehviz_nodejs_addr; // Advanced option: IPv4 address for the UDP connection to the Node.js server (excluding the port number)
     long vehviz_nodejs_port;           // Advanced option: port number for the UDP connection to the Node.js server
-
     long vehviz_web_interface_port; // Port number for the Vehicle Visualizer web interface
+    double vehviz_update_interval_sec; // Advanced option: modifies the update rate of the web-based GUI. Warning: decreasing this too much will affect performance! This value cannot be less than 0.05 s and more than 1 s.
 
-    options_string logfile_name; // Name of the log file where performance data should be store (if specified)
-
+    /*
+     * AMQP
+     */
+    bool quadkFilter_enabled; // 'true' if the QuadKey filter is enabled (messages are pre-filtered by the AMQP broker depending on the Quadkey property), 'false' otherwise (default: 'true' - it must be explicitly disabled, if needed)
+    options_string gn_timestamp_property; // Name of the property to check in the amqp header for the gn-timestamp, when decoding messages without GN+BTP in their payloads
     broker_options_t amqp_broker_one; // "one" because this the main AMQP client; all the other clients are set via "amqp_broker_x"
-
     // Additional AMQP clients options
     // ----------------------------------
     unsigned int num_amqp_x_enabled; // Number of additional AMQP clients which have been activated (>0 if any additional client has been activated)
     broker_options_t *amqp_broker_x; // Array of num_amqp_x_enabled elements (one element for the configuration of each additioanl AMQP client)
     // ----------------------------------
 
-    double context_radius;             // Radius (in m) of the "context" around a triggering vehicle (used for the time being only when sending the data to the Maneuvering Service through the simple indicatorTriggerManager)
-    double vehviz_update_interval_sec; // Advanced option: modifies the update rate of the web-based GUI. Warning: decreasing this too much will affect performance! This value cannot be less than 0.05 s and more than 1 s.
-
-    bool indicatorTrgMan_enabled; // 'true' if the turn indicator trigger manager is enabled (default option), 'false' otherwise
-
-    bool ageCheck_enabled;    // (-g option to set this to 'false') 'true' if an 'age check' on the received data should be performed before updating the database, 'false' otherwise. Default: 'true'.
-    bool quadkFilter_enabled; // 'true' if the QuadKey filter is enabled (messages are pre-filtered by the AMQP broker depending on the Quadkey property), 'false' otherwise (default: 'true' - it must be explicitly disabled, if needed)
-
+    /*
+     * On-demand JSON-over-TCP
+     */
     bool od_json_interface_enabled; // Set to 'true' if the on-demand JSON-over-TCP interface is active on port od_json_interface_port, to 'false' otherwise
     long od_json_interface_port;    // On-demand JSON-over-TCP interface port
+
+    /*
+     * Other
+     */
+    double context_radius;             // Radius (in m) of the "context" around a triggering vehicle (used for the time being only when sending the data to the Maneuvering Service through the simple indicatorTriggerManager)
+    options_string logfile_name; // Name of the log file where performance data should be store (if specified)
+
+    bool ageCheck_enabled;    // (-g option to set this to 'false') 'true' if an 'age check' on the received data should be performed before updating the database, 'false' otherwise. Default: 'true'.
+
 } options_t;
 
 void options_initialize(struct options *options);

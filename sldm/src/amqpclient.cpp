@@ -8,12 +8,13 @@
  * @copyright Copyright (c) 2023
  * 
  */
+
+#include <common/log.h>
 #include <fstream>
 #include <iomanip>
 #include <proton/reconnect_options.hpp>
 #include <time.h>
 #include "amqpclient.h"
-#include "log.h"
 #include "quadkeyts.h"
 #include "utils.h"
 
@@ -91,20 +92,18 @@ AMQPClient::manage_LowfreqContainer(CAM_t *decoded_cam, uint32_t stationID)
 void
 AMQPClient::on_connection_open(proton::connection &conn)
 {
-    if (m_logfile_name != "" && m_logfile_file != nullptr)
+    if (m_configuration.enableLogInfo())
     {
-        fprintf(m_logfile_file, "[LOG - AMQPClient %s] Connection successfully established.\n", m_client_id.c_str());
-        fflush(m_logfile_file);
+        LogInfo("clientId: " << m_client_id << " - Connection successfully established.")
     }
 }
 
 void
 AMQPClient::on_connection_close(proton::connection &conn)
 {
-    if (m_logfile_name != "" && m_logfile_file != nullptr)
+    if (m_configuration.enableLogInfo())
     {
-        fprintf(m_logfile_file, "[LOG - AMQPClient %s] Connection closed.\n", m_client_id.c_str());
-        fflush(m_logfile_file);
+        LogInfo("clientId: " << m_client_id << " - Connection closed.")
     }
 }
 
@@ -127,7 +126,7 @@ AMQPClient::on_container_start(proton::container &c)
         co.user(m_username);
         co_set = true;
 
-        LogInfo(mLogTag << "clientId: " << m_client_id.c_str() << " - AMQP username successfully set: " << m_username)
+        LogInfo("clientId: " << m_client_id << " - AMQP username successfully set: ")
     }
 
     if (!m_password.empty())
@@ -135,7 +134,7 @@ AMQPClient::on_container_start(proton::container &c)
         co.password(m_password);
         co_set = true;
 
-        std::cout << "[AMQPClient " << m_client_id.c_str() << "] AMQP password successfully set." << std::endl;
+        LogInfo("clientId: " << m_client_id << " - AMQP password successfully set.")
     }
 
     if (m_reconnect == true)
@@ -143,7 +142,7 @@ AMQPClient::on_container_start(proton::container &c)
         co.reconnect(proton::reconnect_options());
         co_set = true;
 
-        std::cout << "[AMQPClient " << m_client_id.c_str() << "] AMQP automatic reconnection enabled." << std::endl;
+        LogInfo("clientId: " << m_client_id << " - AMQP automatic reconnection enabled.")
     }
 
     if (m_allow_sasl == true)
@@ -151,7 +150,7 @@ AMQPClient::on_container_start(proton::container &c)
         co.sasl_enabled(true);
         co_set = true;
 
-        std::cout << "[AMQPClient " << m_client_id.c_str() << "] AMQP SASL enabled." << std::endl;
+        LogInfo("clientId: " << m_client_id << " - AMQP SASL enabled.")
     }
 
     if (m_allow_insecure == true)
@@ -159,7 +158,7 @@ AMQPClient::on_container_start(proton::container &c)
         co.sasl_allow_insecure_mechs(true);
         co_set = true;
 
-        std::cout << "[AMQPClient " << m_client_id.c_str() << "] Warning: clear-text passwords are enabled." << std::endl;
+        LogWarning("clientId: " << m_client_id << " - clear-text passwords are enabled.")
     }
 
     if (m_idle_timeout_ms >= 0)
@@ -167,35 +166,19 @@ AMQPClient::on_container_start(proton::container &c)
         if (m_idle_timeout_ms == 0)
         {
             co.idle_timeout(proton::duration::FOREVER);
-
-            std::cout << "[AMQPClient " << m_client_id.c_str() << "] Idle timeout set to FOREVER." << std::endl;
+            LogInfo("clientId: " << m_client_id << " - Idle timeout set to FOREVER.")
         }
         else
         {
             co.idle_timeout(proton::duration(m_idle_timeout_ms));
-
-            std::cout << "[AMQPClient " << m_client_id.c_str() << "] Idle timeout set to " << m_idle_timeout_ms << "." << std::endl;
+            LogInfo("clientId: " << m_client_id << " - Idle timeout set to " << m_idle_timeout_ms << ".")
         }
 
         co_set = true;
     }
     else
     {
-        std::cout << "[AMQPClient " << m_client_id.c_str() << "] No idle timeout has been explicitely set." << std::endl;
-    }
-
-    if (m_logfile_name != "")
-    {
-        if (m_logfile_name == "stdout")
-        {
-            m_logfile_file = stdout;
-        }
-        else
-        {
-            // Opening the output file in write + append mode just to be safe in case the user does not change the file name
-            // between different executions of the S-LDM
-            m_logfile_file = fopen(m_logfile_name.c_str(), "wa");
-        }
+        LogInfo("clientId: " << m_client_id << " - No idle timeout has been explicitely set.")
     }
 
     /* First version of the code without the caching mechanism. Kept here for reference. */
@@ -223,7 +206,7 @@ AMQPClient::on_container_start(proton::container &c)
             }
         }
 
-        std::cout << "[AMQP Client] Quadkey algoritm correctly terminated." << std::endl;
+        LogInfo("Quadkey algoritm correctly terminated.")
 
         // Set the AMQP filter
         set_filter(opts, s);
@@ -237,12 +220,12 @@ AMQPClient::on_container_start(proton::container &c)
     // std::ifstream ifile("cachefile.sldmc");
     // uint64_t bf = 0.0,af = 0.0;
 
-    // if(m_logfile_name!="") {
+    // if(m_configuration.enableLogInfo()) {
     // 	bf=get_timestamp_ns();
     // }
 
     // if(ifile.is_open()) {
-    // 	std::cout<<"[AMQPClient " << m_client_id.c_str() << "] Cache file available: reading the parameters..."<< std::endl;
+    // LogInfo("clientId: " << m_client_id << " - Cache file available: reading the parameters...")
 
     // 	while(getline(ifile, line)) {
     // 		fromfile.push_back(line);
@@ -253,16 +236,18 @@ AMQPClient::on_container_start(proton::container &c)
     // 	double minlonff = stod(fromfile.at(2));
     // 	double maxlonff = stod(fromfile.at(3));
 
-    // 	// fprintf(stdout,"From File we get max_latitude: %.40lf\n",maxlatff);
-    // 	// fprintf(stdout,"Actual max_latitude parameter%.40lf\n",max_latitude);
-    // 	// fprintf(stdout,"From File we get min_latitude: %.40lf\n",minlatff);
-    // 	// fprintf(stdout,"Actual min_latitude parameter%.40lf\n",min_latitude);
+    // LogInfo("From File we get max_latitude: " << maxlatff)
+    // LogInfo("Actual max_latitude parameter " << max_latitude)
+    // LogInfo("From File we get min_latitude: " << minlatff)
+    // LogInfo("Actual min_latitude parameter " << min_latitude)
 
-    // 	if(doublecomp(minlatff, min_latitude) && doublecomp(maxlatff, max_latitude) && doublecomp(minlonff, min_longitude) && doublecomp(maxlonff, max_longitude) && fromfile.size() > 4){
-    // 		cache_file_found = true;
+    // if(doublecomp(minlatff, min_latitude) && doublecomp(maxlatff, max_latitude) && doublecomp(minlonff, min_longitude) && doublecomp(maxlonff, max_longitude) && fromfile.size() > 4){
+    //     cache_file_found = true;
     // 	}
-    // } else {
-    // 	std::cout<<"[AMQPClient " << m_client_id.c_str() << "] No cache file found!"<<std::endl;
+    // }
+    // else
+    // {
+    // 	LogInfo("clientId: " << m_client_id << " - No cache file found!")
     // }
 
     // ifile.close();
@@ -270,7 +255,7 @@ AMQPClient::on_container_start(proton::container &c)
     // if(cache_file_found == false) {
     // 	std::ofstream ofile("cachefile.sldmc");
 
-    // 	std::cout<<"[AMQPClient " << m_client_id.c_str() << "] New coordinates: recomputing quadkeys..."<<std::endl;
+    // 	LogInfo("clientId: " << m_client_id << " - New coordinates: recomputing quadkeys...")
     // 	//LevelOfDetail set into the tilesys class as private variables
     // 	tilesys.setLevelOfDetail(levelOfdetail);
     // 	// Here we get the vector containing all the quadkeys in the range at a given level of detail
@@ -296,7 +281,7 @@ AMQPClient::on_container_start(proton::container &c)
 
     // 	ofile.close();
 
-    // 	std::cout<<"[AMQP Client " << m_client_id.c_str() << "] Finished: Quadkey cache file created."<<std::endl;
+    // 	LogInfo("clientId: " << m_client_id << " - Finished: Quadkey cache file created.")
 
     // 	// Here we create a string to pass to the filter (SQL like)
     // 	std::string s;
@@ -314,7 +299,7 @@ AMQPClient::on_container_start(proton::container &c)
     // 	// Set the AMQP filter
     // 	set_filter(opts, s);
     // } else {
-    // 	std::cout<<"[AMQPClient " << m_client_id.c_str() << "] Filter setup from a cache file... "<<std::endl;
+    // 	LogInfo("clientId: " << m_client_id << " - Filter setup from a cache file... ")
 
     // 	std::string s;
 
@@ -332,37 +317,43 @@ AMQPClient::on_container_start(proton::container &c)
     // 	set_filter(opts, s);
     // }
 
-    // if(m_logfile_name!="") {
+    // if(m_configuration.enableLogInfo()) {
     // 	af=get_timestamp_ns();
 
-    // 	fprintf(m_logfile_file,"[LOG - AMQP STARTUP (Client %s)] Area=%.7lf:%.7lf-%.7lf:%7lf QKCacheFileFound=%d ProcTimeMilliseconds=%.6lf\n",
-    // 		m_client_id.c_str(),
-    // 		min_latitude,min_longitude,max_latitude,max_longitude,
-    // 		cache_file_found,(af-bf)/1000000.0);
-    // }
+    // nlohmann::json debugInfo = {
+    //     {"area",
+    //         {"minLatitude", min_latitude},
+    //         {"minLatitude", min_longitude},
+    //         {"minLatitude", max_latitude},
+    //         {"minLatitude", max_longitude}
+    //     },
+    //     {"QKCacheFileFound", cache_file_found},
+    //     {"ProcTimeMilliseconds", (af-bf)/1000000.0}
+    // };
+    // 	LogDebug("[LOG - AMQP STARTUP (Client " << m_client_id << ")] " << debugInfo)
 
     if (m_quadKey_filter != "")
     {
         set_filter(opts, m_quadKey_filter);
 
-        std::cout << "[AMQPClient " << m_client_id.c_str() << "] QuadKey filter successfully set." << std::endl;
+        LogInfo("clientId: " << m_client_id << " - QuadKey filter successfully set.")
     }
     else
     {
-        std::cout << "[AMQPClient " << m_client_id.c_str() << "] QuadKey filter not set. Any message will be received." << std::endl;
+        LogInfo("clientId: " << m_client_id << " - QuadKey filter not set. Any message will be received.")
     }
 
-    std::cout << "[AMQPClient " << m_client_id.c_str() << "] Connecting to AMQP broker at: " << conn_url_ << std::endl;
+    LogInfo("clientId: " << m_client_id << " - Connecting to AMQP broker at: " << conn_url_)
 
     proton::connection conn;
     if (co_set == true)
     {
-        std::cout << "[AMQPClient " << m_client_id.c_str() << "] Connecting with user-defined connection options." << std::endl;
+        LogInfo("clientId: " << m_client_id << " - Connecting with user-defined connection options.")
         conn = c.connect(conn_url_, co);
     }
     else
     {
-        std::cout << "[AMQPClient " << m_client_id.c_str() << "] Connecting with default connection options." << std::endl;
+        LogInfo("clientId: " << m_client_id << " - Connecting with default connection options.")
         conn = c.connect(conn_url_);
     }
 
@@ -387,12 +378,12 @@ AMQPClient::on_message(proton::delivery &d, proton::message &msg)
     uint64_t bf = 0.0, af = 0.0;
     uint64_t main_bf = 0.0, main_af = 0.0;
 
-    if (m_logfile_name != "")
+    if (m_configuration.enableLogInfo())
     {
         main_bf = get_timestamp_ns();
 
         // This additional log line has been commented out to avoid being too verbose
-        // fprintf(m_logfile_file,"[NEW MESSAGE RX]\n");
+        // LogDebug("[NEW MESSAGE RX]");
     }
 
     if (m_printMsg == true)
@@ -422,7 +413,7 @@ AMQPClient::on_message(proton::delivery &d, proton::message &msg)
         return;
     }
 
-    if (m_logfile_name != "")
+    if (m_configuration.enableLogInfo())
     {
         bf = get_timestamp_ns();
     }
@@ -431,15 +422,15 @@ AMQPClient::on_message(proton::delivery &d, proton::message &msg)
     // m_decodeFrontend.setPrintPacket(true); // <- uncomment to print the bytes of each received message. Should be used for debug only, and should be kept disabled when deploying the S-LDM.
     if (m_decodeFrontend.decodeEtsi(message_bin_buf, message_bin.size(), decodedData, etsiDecoder::decoderFrontend::MSGTYPE_AUTO) != ETSI_DECODER_OK)
     {
-        LogError("Error! Cannot decode ETSI packet!")
+        LogError("Cannot decode ETSI packet!")
         return;
     }
 
-    if (m_logfile_name != "")
+    if (m_configuration.enableLogInfo())
     {
         af = get_timestamp_ns();
 
-        fprintf(m_logfile_file, "[LOG - MESSAGE DECODER (Client %s)] ProcTimeMilliseconds=%.6lf\n", m_client_id.c_str(), (af - bf) / 1000000.0);
+        LogDebug("[LOG - MESSAGE DECODER (Client " << m_client_id << ")] ProcTimeMilliseconds=" << (af - bf) / 1000000.0)
     }
 
     // If a CAM has been received, it should be used to update the internal in-memory database
@@ -456,7 +447,7 @@ AMQPClient::on_message(proton::delivery &d, proton::message &msg)
         // After getting the lat and lon values from the CAM, check if it is inside the S-LDM full coverage area,
         // using the areaFilter module (which can access the command line options, thus also the coverage area
         // specified by the user)
-        if (m_logfile_name != "")
+        if (m_configuration.enableLogInfo())
         {
             bf = get_timestamp_ns();
         }
@@ -466,14 +457,14 @@ AMQPClient::on_message(proton::delivery &d, proton::message &msg)
             return;
         }
 
-        if (m_logfile_name != "")
+        if (m_configuration.enableLogInfo())
         {
             af = get_timestamp_ns();
 
-            fprintf(m_logfile_file, "[LOG - AREA FILTER (Client %s)] ProcTimeMilliseconds=%.6lf\n", m_client_id.c_str(), (af - bf) / 1000000.0);
+            LogDebug("[LOG - AREA FILTER (Client " << m_client_id << ")] ProcTimeMilliseconds=" << (af - bf) / 1000000.0)
         }
 
-        if (m_logfile_name != "")
+        if (m_configuration.enableLogInfo())
         {
             bf = get_timestamp_ns();
         }
@@ -545,13 +536,13 @@ AMQPClient::on_message(proton::delivery &d, proton::message &msg)
                 else
                 {
                     gn_timestamp = UINT64_MAX; // Set to an impossible value, to understand it is not specified (not set to zero beacuse is a possible correct value).
-                    fprintf(stdout, "[WARNING] Current message contains no GN and a not supported gn_timestamp property, ageCheck disabled\n");
+                    LogWarning("Current message contains no GN and a not supported gn_timestamp property, ageCheck disabled")
                 }
             }
             else
             {
                 gn_timestamp = UINT64_MAX;
-                fprintf(stdout, "[WARNING] Current message contains no GN and no gn_timestamp property, ageCheck disabled\n");
+                LogWarning("Current message contains no GN and no gn_timestamp property, ageCheck disabled")
             }
 
             vehdata.stationType = static_cast<ldmmap::e_StationTypeLDM>(decoded_cam->cam.camParameters.basicContainer.stationType);
@@ -591,11 +582,12 @@ AMQPClient::on_message(proton::delivery &d, proton::message &msg)
                 if ((gn_timestamp > retveh.vehData.gnTimestamp && gap > 300000) ||
                     (gn_timestamp < retveh.vehData.gnTimestamp && gap > -300000))
                 {
-                    if (m_logfile_name != "")
+                    if (m_configuration.enableLogInfo())
                     {
-                        fprintf(m_logfile_file, "[LOG - DATABASE UPDATE (Client %s)] Message discarded (data is too old). Rx = %lu, Stored = %lu, Gap = %lld\n",
-                                m_client_id.c_str(),
-                                gn_timestamp, retveh.vehData.gnTimestamp, gap);
+                        LogDebug("[LOG - DATABASE UPDATE (Client " << m_client_id << ")] Message discarded (data is too old). "
+                                << "Rx = " << gn_timestamp << ", "
+                                << "Stored = " << retveh.vehData.gnTimestamp << ", "
+                                << "Gap = " << gap)
                         return;
                     }
                 }
@@ -676,7 +668,7 @@ AMQPClient::on_message(proton::delivery &d, proton::message &msg)
         //		}
 
         // If logging is enabled, compute also an "instantaneous update period" metric (i.e., how much time has passed between two consecutive vehicle updates)
-        if (m_logfile_name != "")
+        if (m_configuration.enableLogInfo())
         {
             ldmmap::LDMMap::returnedVehicleData_t retveh;
 
@@ -690,29 +682,28 @@ AMQPClient::on_message(proton::delivery &d, proton::message &msg)
             }
         }
 
-        // std::cout << "[DEBUG] Updating vehicle with stationID: " << vehdata.stationID << std::endl;
+        // LogDebug("Updating vehicle with stationID: " << vehdata.stationID)
 
         db_retval = m_db->insert(vehdata);
 
         if (db_retval != ldmmap::LDMMap::LDMMap_error_t::LDMMAP_OK && db_retval != ldmmap::LDMMap::LDMMap_error_t::LDMMAP_UPDATED)
         {
-            LogError("Warning! Insert on the database for vehicle " << (int)stationID << "failed!")
+            LogError("Warning! Insert on the database for vehicle " << stationID << " failed!")
         }
 
-        if (m_logfile_name != "")
+        if (m_configuration.enableLogInfo())
         {
             af = get_timestamp_ns();
 
             //TODO: 3 logger should be configured, 1 for console, 1 file, 1 for specific data on file
-            LogDebug(mLogTag << " DATABASE UPDATE (Client " << m_client_id << ")")
-            fprintf(m_logfile_file, "[LOG - DATABASE UPDATE (Client %s)] LowFrequencyContainerAvail=%d InsertReturnValue=%d ProcTimeMilliseconds=%.6lf\n",
-                    m_client_id.c_str(),
-                    decoded_cam->cam.camParameters.highFrequencyContainer.choice.basicVehicleContainerHighFrequency.vehicleWidth != VehicleWidth_unavailable,
-                    db_retval,
-                    (af - bf) / 1000000.0);
+            LogDebug("DATABASE UPDATE (Client " << m_client_id << ")")
+            LogInfo("[LOG - DATABASE UPDATE (Client " << m_client_id << ")] "
+                    << "LowFrequencyContainerAvail=" << decoded_cam->cam.camParameters.highFrequencyContainer.choice.basicVehicleContainerHighFrequency.vehicleWidth != VehicleWidth_unavailable << " "
+                    << "InsertReturnValue=" << db_retval << " " 
+                    << "ProcTimeMilliseconds=" << (af - bf) / 1000000.0)
         }
 
-        if (m_logfile_name != "")
+        if (m_configuration.enableLogInfo())
         {
             bf = get_timestamp_ns();
         }
@@ -730,7 +721,7 @@ AMQPClient::on_message(proton::delivery &d, proton::message &msg)
                     {
                         if (m_indicatorTrgMan->checkAndTrigger(lat, lon, stationID, vehdata.exteriorLights.getData()) == true)
                         {
-                            std::cout << "[TRIGGER] Triggering condition detected!" << std::endl;
+                            LogInfo("[TRIGGER] Triggering condition detected!")
                         }
                     }
                 }
@@ -739,14 +730,14 @@ AMQPClient::on_message(proton::delivery &d, proton::message &msg)
                     // if the interop-hijack is NOT enabled, trigger no matter the vehicleType
                     if (m_indicatorTrgMan->checkAndTrigger(lat, lon, stationID, vehdata.exteriorLights.getData()) == true)
                     {
-                        std::cout << "[TRIGGER] Triggering condition detected!" << std::endl;
+                        LogInfo("[TRIGGER] Triggering condition detected!")
                     }
                 }
             }
         }
 
         //TODO: 3 logger should be configured, 1 for console, 1 file, 1 for specific data on file
-        if (m_logfile_name != "")
+        if (m_configuration.enableLogInfo())
         {
             af = get_timestamp_ns();
             nlohmann::json triggerData = {
@@ -757,13 +748,13 @@ AMQPClient::on_message(proton::delivery &d, proton::message &msg)
                 {"isInsideInternalArea", m_areaFilter.isInsideInternal(lat, lon)},
                 {"procTimeMilliseconds", (af - bf) / 1000000.0},
             };
-            LogDebug(mLogTag << "TRIGGER CHECK - " << triggerData)
+            LogDebug("TRIGGER CHECK - " << triggerData)
         }
 
         ASN_STRUCT_FREE(asn_DEF_CAM, decoded_cam);
 
         //TODO: 3 logger should be configured, 1 for console, 1 file, 1 for specific data on file
-        if (m_logfile_name != "")
+        if (m_configuration.enableLogInfo())
         {
             main_af = get_timestamp_ns();
             nlohmann::json infoData = {
@@ -783,21 +774,16 @@ AMQPClient::on_message(proton::delivery &d, proton::message &msg)
                 {"procTimeMilliseconds", (main_af - main_bf) / 1000000.0},
                 {"cardinality",  m_db->getCardinality()}
             };
-            LogDebug(mLogTag << "FULL CAM PROCESSING - " << infoData)
+            LogDebug("FULL CAM PROCESSING - " << infoData)
         }
     }
     else
     {
-        LogError("Warning! Only CAM messages are supported for the time being!")
+        LogError("Only CAM messages are supported for the time being!")
         return;
     }
 }
 
 void
 AMQPClient::on_container_stop(proton::container &c)
-{
-    if (m_logfile_name != "" && m_logfile_name != "stdout")
-    {
-        fclose(m_logfile_file);
-    }
-}
+{}

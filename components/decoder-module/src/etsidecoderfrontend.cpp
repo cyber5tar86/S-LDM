@@ -9,6 +9,7 @@
  * 
  */
 
+#include <common/log.h>
 #include <iostream>
 #include "basicheader.h"
 #include "btp.h"
@@ -32,7 +33,10 @@ NAMED_ENUM_DEFINE_FCNS(etsi_message_t, MSGTYPES);
 namespace etsiDecoder
 {
 
-decoderFrontend::decoderFrontend() = default;
+decoderFrontend::decoderFrontend()
+{
+    log4cplus::NDCContextCreator context(LOG4CPLUS_TEXT("DecoderFrontend"));
+}
 
 int
 decoderFrontend::decodeEtsi(uint8_t *buffer, size_t buflen, etsiDecodedData_t &decoded_data, msgType_e msgtype)
@@ -46,7 +50,7 @@ decoderFrontend::decodeEtsi(uint8_t *buffer, size_t buflen, etsiDecodedData_t &d
 
     if (m_print_pkt == true)
     {
-        std::cout << "[INFO] [Decoder] Full packet content :" << std::endl;
+        LogInfo("Full packet content :" )
         for (uint32_t i = 0; i < buflen; i++)
         {
             std::printf("%02X ", buffer[i]);
@@ -69,7 +73,7 @@ decoderFrontend::decodeEtsi(uint8_t *buffer, size_t buflen, etsiDecodedData_t &d
             isGeoNet = true;
         }
 
-        std::cout << "[INFO] [Decoder] Automatic detection of message type enabled. Message type: " << (isGeoNet == true ? "Full ITS message" : "Pure Facilities layer message") << std::endl;
+       LogInfo("Automatic detection of message type enabled. Message type: " << (isGeoNet == true ? "Full ITS message" : "Pure Facilities layer message"))
     }
     else if (msgtype == MSGTYPE_FACILITYONLY)
     {
@@ -83,25 +87,25 @@ decoderFrontend::decodeEtsi(uint8_t *buffer, size_t buflen, etsiDecodedData_t &d
     if (isGeoNet == true)
     {
         GeoNet geonet;
-        btp BTP;
+        Btp BTP;
         GNDataIndication_t gndataIndication;
         BTPDataIndication_t btpDataIndication;
 
         if (geonet.decodeGN(buffer, &gndataIndication) != GN_OK)
         {
-            std::cerr << "[WARN] [Decoder] Warning: GeoNet unable to decode a received packet." << std::endl;
+            LogWarning("GeoNet unable to decode a received packet.")
             return ETSI_DECODED_ERROR;
         }
 
         if (BTP.decodeBTP(gndataIndication, &btpDataIndication) != BTP_OK)
         {
-            std::cerr << "[WARN] [Decoder] Warning: BTP unable to decode a received packet." << std::endl;
+            LogWarning("BTP unable to decode a received packet.")
             return ETSI_DECODED_ERROR;
         }
 
         if (m_print_pkt == true)
         {
-            std::cout << "[INFO] [Decoder] ETSI packet content :" << std::endl;
+            LogInfo("ETSI packet content :")
             for (uint32_t i = 0; i < btpDataIndication.lenght; i++)
             {
                 std::printf("%02X ", btpDataIndication.data[i]);
@@ -119,9 +123,11 @@ decoderFrontend::decodeEtsi(uint8_t *buffer, size_t buflen, etsiDecodedData_t &d
 
             if (decode_result.code != RC_OK || decoded_ == nullptr)
             {
-                std::cerr << "[WARN] [Decoder] Warning: unable to decode a received CAM." << std::endl;
+                LogWarning("unable to decode a received CAM.")
                 if (decoded_)
+                {
                     free(decoded_);
+                }
                 return ETSI_DECODER_ERROR;
             }
         }
@@ -140,9 +146,11 @@ decoderFrontend::decodeEtsi(uint8_t *buffer, size_t buflen, etsiDecodedData_t &d
 
             if (decode_result.code != RC_OK || decoded_ == nullptr)
             {
-                std::cerr << "[WARN] [Decoder] Warning: unable to decode a received DENM." << std::endl;
+                LogWarning("unable to decode a received DENM.")
                 if (decoded_)
+                {
                     free(decoded_);
+                }
                 return ETSI_DECODER_ERROR;
             }
             // Only CAMs and DENMs are supported for the time being
@@ -169,9 +177,11 @@ decoderFrontend::decodeEtsi(uint8_t *buffer, size_t buflen, etsiDecodedData_t &d
 
                 if (decode_result.code != RC_OK || decoded_ == nullptr)
                 {
-                    std::cerr << "[WARN] [Decoder] Warning: unable to decode a received CAM (no BTP/GN)." << std::endl;
+                    LogWarning("unable to decode a received CAM (no BTP/GN).")
                     if (decoded_)
+                    {
                         free(decoded_);
+                    }
                     return ETSI_DECODER_ERROR;
                 }
             }
@@ -183,23 +193,25 @@ decoderFrontend::decodeEtsi(uint8_t *buffer, size_t buflen, etsiDecodedData_t &d
 
                 if (decode_result.code != RC_OK || decoded_ == nullptr)
                 {
-                    std::cerr << "[WARN] [Decoder] Warning: unable to decode a received DENM (no BTP/GN)." << std::endl;
+                    LogWarning("unable to decode a received DENM (no BTP/GN).")
                     if (decoded_)
+                    {
                         free(decoded_);
+                    }
                     return ETSI_DECODER_ERROR;
                 }
             }
             else
             {
-                std::cerr << "[WARN] [Decoder] Unable to decode a reveived message with unknown/unsupported messageID: " << messageID << std::endl;
-                std::cerr << "[ERROR] [Decoder] Error: this point in the code should never be reached. Please report this bug to the developers. Thank you!" << std::endl;
+                LogWarning("Unable to decode a reveived message with unknown/unsupported messageID: ")
+                LogError("this point in the code should never be reached. Please report this bug to the developers. Thank you!")
                 decoded_data.type = ETSI_DECODED_ERROR;
                 return ETSI_DECODER_ERROR;
             }
         }
         else
         {
-            std::cerr << "[WARN] [Decoder] Unable to decode a reveived message with unknown/unsupported messageID: " << messageID << std::endl;
+            LogWarning("Unable to decode a reveived message with unknown/unsupported messageID: ")
             decoded_data.type = ETSI_DECODED_ERROR;
             return ETSI_DECODER_ERROR;
         }

@@ -34,6 +34,12 @@ namespace ldmmap
         clear();
     }
 
+    LDMMapPtr
+    LDMMap::getInstance()
+    {
+        return std::make_shared<LDMMap>();
+    }
+
     LDMMap::LDMMap_error_t
     LDMMap::insert(vehicleData_t newVehicleData)
     {

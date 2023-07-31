@@ -9,6 +9,7 @@
  * 
  */
 
+#include <common/log.h>
 #include <cstring>
 #include "commonheader.h"
 
@@ -16,6 +17,8 @@ namespace etsiDecoder
 {
 commonHeader::commonHeader()
 {
+    log4cplus::NDCContextCreator context(LOG4CPLUS_TEXT("CommonHeader"));
+
     m_nextHeader = 0;
     m_headerType = 0;
     m_headerSubType = 0;

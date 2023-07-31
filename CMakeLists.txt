@@ -6,6 +6,8 @@ project(
     LANGUAGES CXX
     DESCRIPTION "S-LDM"
 )
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
+
 add_subdirectory(components)
 add_subdirectory(sldm)

@@ -12,11 +12,12 @@ find_package(Boost REQUIRED COMPONENTS)
 find_package(cpprestsdk REQUIRED)
 find_package(GeographicLib REQUIRED)
 find_package(nlohmann_json REQUIRED CONFIG)
+find_package(log4cplus REQUIRED)
 #find_package(s-ldm-components REQUIRED CONFIG COMPONENTS asn1 decoder-module options vehicle-visualizer)
 
-add_executable(s-ldm)
+add_executable(${PROJECT_NAME})
 
-target_sources(s-ldm PRIVATE
+target_sources(${PROJECT_NAME} PRIVATE
     src/amqpclient.cpp
     src/areafilter.cpp
     src/jsonserver.cpp
@@ -30,7 +31,7 @@ target_sources(s-ldm PRIVATE
     src/utils.cpp
 )
 
-target_include_directories(s-ldm PRIVATE
+target_include_directories(${PROJECT_NAME} PRIVATE
     include
     ../components/asn1/include
     ../components/options/include
@@ -38,10 +39,11 @@ target_include_directories(s-ldm PRIVATE
     ../components/vehicle-visualizer/include
 )
 
-target_link_libraries(s-ldm PRIVATE
+target_link_libraries(${PROJECT_NAME} PRIVATE
     boost::boost
     crypto
     cpprestsdk::cpprest
+    s-ldm::logger
     m
     nlohmann_json::nlohmann_json
     pthread
@@ -52,10 +54,10 @@ target_link_libraries(s-ldm PRIVATE
     vehicle-visualizer
 )
 
-target_compile_features(s-ldm PRIVATE cxx_std_17)
+target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 
 install(
-    TARGETS s-ldm DESTINATION "."
+    TARGETS ${PROJECT_NAME} DESTINATION "."
     RUNTIME DESTINATION bin
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib

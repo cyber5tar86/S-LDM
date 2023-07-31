@@ -1,6 +1,18 @@
+/**
+ * @file areafilter.cpp
+ * @author your name (you@domain.com)
+ * @brief 
+ * @version 0.1
+ * @date 2023-07-30
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
+
+#include <common/log.h>
 #include "areafilter.h"
 
-#include <utility>
+AreaFilterConfiguration::AreaFilterConfiguration() = default;
 
 AreaFilterConfiguration::AreaFilterConfiguration(const nlohmann::json &configuration)
 {
@@ -11,6 +23,15 @@ AreaFilterConfiguration::AreaFilterConfiguration(const std::string &configuratio
 {
     fromString(configuration);
 }
+
+AreaFilterConfiguration::AreaFilterConfiguration(double minLat, double minLon, double maxLat, double maxLon, double extLatFactor, double extLonFactor)
+    : mMinLat(minLat),
+      mMinLon(minLon),
+      mMaxLat(maxLat),
+      mMaxLon(maxLon),
+      mExtLatFactor(extLatFactor),
+      mExtLonFactor(extLonFactor)
+{}
 
 double &
 AreaFilterConfiguration::minLat()
@@ -84,24 +105,20 @@ AreaFilterConfiguration::fromJson(const nlohmann::json &configuration)
     mExtLonFactor = configuration.at(AreaFilterConfigurationKeys::extLonFactor);
 }
 
-AreaFilter::AreaFilter(AreaFilterConfigurationPtr configuration)
-    : mConfiguration(std::move(configuration))
-{}
-
-AreaFilter::AreaFilter() = default;
-
-bool
-AreaFilter::setConfiguration(const AreaFilterConfigurationPtr &configuration)
+AreaFilter::AreaFilter()
 {
-    bool res{false};
+    log4cplus::NDCContextCreator context(LOG4CPLUS_TEXT("AreaFilter"));
+}
 
-    if (configuration != nullptr)
-    {
-        mConfiguration = configuration;
-        res = true;
-    }
+AreaFilter::AreaFilter(const AreaFilterConfiguration& configuration) : AreaFilter()
+{
+    mConfiguration = configuration;
+}
 
-    return res;
+void
+AreaFilter::setConfiguration(const AreaFilterConfiguration& configuration)
+{
+    mConfiguration = configuration;
 }
 
 bool
@@ -109,13 +126,10 @@ AreaFilter::isInside(double lat, double lon)
 {
     bool res{false};
 
-    if (mConfiguration != nullptr)
+    if (lat >= mConfiguration.minLat() - mConfiguration.extLatFactor() && lat <= mConfiguration.maxLat() + mConfiguration.extLatFactor() &&
+        lon >= mConfiguration.minLon() - mConfiguration.extLonFactor() && lon <= mConfiguration.maxLon() + mConfiguration.extLonFactor())
     {
-        if (lat >= mConfiguration->minLat() - mConfiguration->extLatFactor() && lat <= mConfiguration->maxLat() + mConfiguration->extLatFactor() &&
-            lon >= mConfiguration->minLon() - mConfiguration->extLonFactor() && lon <= mConfiguration->maxLon() + mConfiguration->extLonFactor())
-        {
-            res = true;
-        }
+        res = true;
     }
 
     return res;
@@ -126,13 +140,10 @@ AreaFilter::isInsideInternal(double lat, double lon)
 {
     bool res{false};
 
-    if (mConfiguration != nullptr)
+    if (lat >= mConfiguration.minLat() && lat <= mConfiguration.maxLat() &&
+        lon >= mConfiguration.minLon() && lon <= mConfiguration.maxLon())
     {
-        if (lat >= mConfiguration->minLat() && lat <= mConfiguration->maxLat() &&
-            lon >= mConfiguration->minLon() && lon <= mConfiguration->maxLon())
-        {
-            res = true;
-        }
+        res = true;
     }
 
     return false;

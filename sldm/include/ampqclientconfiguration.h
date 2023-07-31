@@ -36,20 +36,25 @@ class AMQPClientConfiguration
         /**
          * @brief Construct a new AMQPClientConfiguration object
          * 
-         * @param connectionURL_ 
-         * @param address_ 
-         * @param latitudeMin_ 
-         * @param latitudeMax_ 
-         * @param longitudeMin_ 
-         * @param longitudeMax_ 
+         * @param connectionURL
+         * @param address
+         * @param latitudeMin
+         * @param latitudeMax
+         * @param longitudeMin
+         * @param longitudeMax
+         * @param enableLogInfo
          */
-        AMQPClientConfiguration(std::string connectionURL_, const std::string &address_, const double &latitudeMin_, const double &latitudeMax_, const double &longitudeMin_, const double &longitudeMax_) :
-            : connectionURL(std::move(connectionURL_)),
-              address(std::move(address_)),
-              latitudeMin(std::move(latitudeMin_)),
-              latitudeMax(std::move(latitudeMax_)),
-              longitudeMin(std::move(longitudeMin_)),
-              longitudeMax(std::move(longitudeMax_))
+        AMQPClientConfiguration(std::string connectionURL, const std::string &address,
+                                const double &latitudeMin, const double &latitudeMax,
+                                const double &longitudeMin, const double &longitudeMax,
+                                bool enableLogInfo)
+            : mConnectionURL(std::move(connectionURL)),
+              mAddress(std::move(address)),
+              mLatitudeMin(std::move(latitudeMin)),
+              mLatitudeMax(std::move(latitudeMax)),
+              mLongitudeMin(std::move(longitudeMin)),
+              mLongitudeMax(std::move(longitudeMax)),
+              mEnableLogInfo(enableLogInfo)
         {}
 
         /**
@@ -58,17 +63,61 @@ class AMQPClientConfiguration
          */
         ~AMQPClientConfiguration() = default;
 
-        NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(AMQPClientConfiguration, name, address, age)
+        NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(AMQPClientConfiguration, mConnectionURL, mAddress,
+                                                    mLatitudeMin, mLatitudeMax,
+                                                    mLongitudeMin, mLongitudeMax,
+                                                    mEnableLogInfo)
+
+        std::string
+        connectionURL() const
+        {
+            return mConnectionURL;
+        }
+
+        std::string
+        address() const
+        {
+            return mAddress;
+        }
+
+        double
+        latitudeMin() const
+        {
+            return mLatitudeMin;
+        }
+
+        double
+        latitudeMax() const
+        {
+            return mLatitudeMax;
+        }
+
+        double
+        longitudeMin() const
+        {
+            return mLongitudeMin;
+        }
+
+        double
+        longitudeMax() const
+        {
+            return mLongitudeMax;
+        }
+
+        bool
+        enableLogInfo() const
+        {
+            return mEnableLogInfo;
+        }
 
     private:
-        std::string mLogTag{"[AMQPClient] "};   
-
-        std::string connectionURL{""};
-        std::string address{""};
-        double latitudeMin{0.0};
-        double latitudeMax{0.0};
-        double longitudeMin{0.0};
-        double longitudeMax{0.0};
-}
+        std::string mConnectionURL{""};
+        std::string mAddress{""};
+        double mLatitudeMin{0.0};
+        double mLatitudeMax{0.0};
+        double mLongitudeMin{0.0};
+        double mLongitudeMax{0.0};
+        bool mEnableLogInfo{false};
+};
 
 #endif /* AMQPCLIENTCONFIGURATION_H */

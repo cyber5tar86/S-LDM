@@ -1,15 +1,17 @@
 cmake_minimum_required(VERSION 3.15)
 
-project(vehicle-visualizer
+project(logger
     VERSION 1.0.0
     LANGUAGES CXX
-    DESCRIPTION "Vehicle Visualizer"
+    DESCRIPTION "logger wrapper"
 )
+
+find_package(log4cplus REQUIRED CONFIG)
 
 add_library(${PROJECT_NAME})
 
 target_sources(${PROJECT_NAME} PRIVATE
-    src/vehicle-visualizer.cc
+    src/log.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC
@@ -17,16 +19,16 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-target_link_libraries(${PROJECT_NAME} PUBLIC
-    s-ldm::logger
-)
-
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
+
+target_link_libraries(${PROJECT_NAME} PUBLIC
+    log4cplus::log4cplus
+)
 
 set_property(
     TARGET ${PROJECT_NAME}
     PROPERTY PUBLIC_HEADER
-        include/vehicle-visualizer.h
+        include/log.h
 )
 
 install(

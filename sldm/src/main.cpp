@@ -38,7 +38,12 @@ std::condition_variable synccv;
 std::unordered_map<int, AMQPClient *> amqpclimap;
 std::mutex amqpclimutex;
 
-void AMQPclient_t(const LDMMapPtr &db_ptr, options_t *opts_ptr, std::string logfile_name, std::string clientID, unsigned int clientIndex, indicatorTriggerManager *itm_ptr, std::string quadKey_filter, AMQPClient *main_amqp_ptr)
+// logger stuff
+LogCp::GetInstance();
+NDC context("[main]");
+
+void
+AMQPclient_t(const LDMMapPtr &db_ptr, options_t *opts_ptr, std::string logfile_name, std::string clientID, unsigned int clientIndex, indicatorTriggerManager *itm_ptr, std::string quadKey_filter, AMQPClient *main_amqp_ptr)
 {
     if (clientIndex >= MAX_ADDITIONAL_AMQP_CLIENTS - 1)
     {
@@ -133,14 +138,16 @@ typedef struct vizOptions
     options_t *opts_ptr;
 } vizOptions_t;
 
-void clearVisualizerObject(uint64_t id, void *vizObjVoidPtr)
+void
+clearVisualizerObject(uint64_t id, void *vizObjVoidPtr)
 {
     vehicleVisualizer *vizObjPtr = static_cast<vehicleVisualizer *>(vizObjVoidPtr);
 
     vizObjPtr->sendObjectClean(std::to_string(id));
 }
 
-void DBcleaner_callback(const std::shared_ptr<ldmmap::LDMMap > &db_ptr)
+void
+DBcleaner(const std::shared_ptr<ldmmap::LDMMap > &db_ptr)
 {
     // Create a new timer
     Timer tmr(DB_CLEANER_INTERVAL_SECONDS * 1e3);
@@ -174,14 +181,16 @@ void DBcleaner_callback(const std::shared_ptr<ldmmap::LDMMap > &db_ptr)
     }
 }
 
-void updateVisualizer(ldmmap::vehicleData_t vehdata, void *vizObjVoidPtr)
+void
+updateVisualizer(ldmmap::vehicleData_t vehdata, void *vizObjVoidPtr)
 {
     vehicleVisualizer *vizObjPtr = static_cast<vehicleVisualizer *>(vizObjVoidPtr);
 
     vizObjPtr->sendObjectUpdate(std::to_string(vehdata.stationID), vehdata.lat, vehdata.lon, static_cast<int>(vehdata.stationType), vehdata.heading);
 }
 
-void VehVizUpdater_callback(const vizOptions_t &vizParams)
+void
+VehVizUpdater(const vizOptions_t &vizParams)
 {
     // Get a direct pointer to the database
     auto db_ptr = vizParams.db_ptr;
@@ -389,90 +398,11 @@ void autotest()
     LogInfo("*-*-*-*-*-* S-LDM startup auto-tests terminated. The S-LDM will start now. *-*-*-*-*-*")
 }
 
-int main(int argc, char **argv)
-{
-    terminatorFlag = false;
-
-    // Thread attributes (unused, for the time being)
-    // pthread_attr_t tattr;
-
-    // First of all, parse the options
-    options_t sldm_opts;
-
-    // Read options from command line
-    options_initialize(&sldm_opts);
-    if (parse_options(argc, argv, &sldm_opts))
-    {
-        LogError("Error while parsing the options with the C options module.")
-        exit(EXIT_FAILURE);
-    }
-
-    const auto now = std::time(nullptr);
-
-    LogInfo("The S-LDM started at " << std::ctime(&now))
-    LogInfo("corresponding to GNTimestamp = " << get_timestamp_ms_gn())
-    LogInfo("S-LDM version: " << VERSION_STR)
-
-    // Print, as an example, the full (internal + external) area covered by the S-LDM
-    LogInfo("This S-LDM instance will cover the full area defined by: [" << sldm_opts.min_lat - sldm_opts.ext_lat_factor << "," << sldm_opts.min_lon - sldm_opts.ext_lon_factor << "],[" << sldm_opts.max_lat + sldm_opts.ext_lat_factor << "," << sldm_opts.max_lon + sldm_opts.ext_lon_factor << "]")
-    if (sldm_opts.cross_border_trigger == true)
-    {
-        LogInfo("Cross-border trigger mode enabled.")
-    }
-
-    /* ------------------------------------------------------------------------------------------------------------------------------------ */
-    /* ------------------------------------------------------------------------------------------------------------------------------------ */
-    /* ------------------------------------------------------------------------------------------------------------------------------------ */
-    /* ------------------------------------------------------------------------------------------------------------------------------------ */
-    /* ------------------------------------------------------------------------------------------------------------------------------------ */
-
-    // Create a new DB object
-    auto db_ptr =LDMMapPtr();
-
-    // Set a central latitude and longitude depending on the coverage area of the S-LDM (to be used only for visualization purposes -
-    // - it does not affect in any way the performance or the operations of the LDMMap DB module)
-    db_ptr->setCentralLatLon((sldm_opts.min_lat + sldm_opts.max_lat) / 2.0, (sldm_opts.min_lon + sldm_opts.max_lon) / 2.0);
-
-    // Before starting the AMQP client event loop, we should create a parallel thread, reading periodically
-    // (e.g. every 5 s) the database through the pointer "db_ptr" and "cleaning" the entries which are too old
-    auto dbCleanerThread = std::thread([db_ptr](){
-        DBcleaner_callback(db_ptr);
-    });
-
-    // We should also start here a second parallel thread, reading periodically the database (e.g. every 500 ms) and sending the vehicle data to
-    // the vehicleVisualizer
-    vizOptions_t vizParams = {db_ptr, &sldm_opts};
-    auto vehVizThread = std::thread([ vizParams](){
-        VehVizUpdater_callback(vizParams);
-    });
-
-    // Get the log file name from the options, if available, to enable log mode inside the AMQP client and the S-LDM modules
-    std::string logfile_name = "";
-    if (options_string_len(sldm_opts.logfile_name) > 0)
-    {
-        logfile_name = std::string(options_string_pop(sldm_opts.logfile_name));
-        if (logfile_name != "stdout")
-        {
-            time_t rawtime;
-            struct tm *timeinfo;
-            char buffer[25] = {"\0"};
-            time(&rawtime);
-            timeinfo = localtime(&rawtime);
-            strftime(buffer, 25, "-%Y%m%d-%H:%M:%S", timeinfo);
-            logfile_name += buffer;
-        }
-    }
-
-    // Create an indicatorTriggerManager object (the same object will be then accessed by all the AMQP clients, when using more than one client)
-    indicatorTriggerManager itm(db_ptr, &sldm_opts);
-
-    if (sldm_opts.left_indicator_trg_enable == true)
-    {
-        itm.setLeftTurnIndicatorEnable(true);
-    }
-
     // Set up the AMQP QuadKey filter for the AMQP client(s) (if more clients are spawned, the filter should be the same for all of them)
     // -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+std::string
+initializeAmqpFilter() const
+{
     QuadKeys::QuadKeyTS tilesys;
     std::string filter_str;
     bool cache_file_found = false;
@@ -498,7 +428,7 @@ int main(int argc, char **argv)
         bf = get_timestamp_ns();
     }
 
-    filter_str = tilesys.getQuadKeyFilter(sldm_opts.min_lat - sldm_opts.ext_lat_factor, sldm_opts.min_lon - sldm_opts.ext_lon_factor, sldm_opts.max_lat + sldm_opts.ext_lat_factor, sldm_opts.max_lon + sldm_opts.ext_lon_factor, &cache_file_found);
+    auto filter_str = tilesys.getQuadKeyFilter(sldm_opts.min_lat - sldm_opts.ext_lat_factor, sldm_opts.min_lon - sldm_opts.ext_lon_factor, sldm_opts.max_lat + sldm_opts.ext_lat_factor, sldm_opts.max_lon + sldm_opts.ext_lon_factor, &cache_file_found);
 
     // This is just to log the time needed to compute the full QuadKey filter, if requested by the user
     if (logfile_name != "")
@@ -515,32 +445,19 @@ int main(int argc, char **argv)
             fclose(logfile_file);
         }
     }
-    // -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    // Create the main AMQP client object
-    AMQPClient mainRecvClient(std::string(options_string_pop(sldm_opts.amqp_broker_one.broker_url)), std::string(options_string_pop(sldm_opts.amqp_broker_one.broker_topic)), sldm_opts.min_lat, sldm_opts.max_lat, sldm_opts.min_lon, sldm_opts.max_lon, &sldm_opts, db_ptr, logfile_name);
+    return filter_str;
+}
 
-
-    // Create the JSONserver object for the on-demand JSON-over-TCP interface
-    JSONserver jsonsrv(db_ptr);
-
-    // Start the on-demand JSON-over-TCP interface if enabled through the corresponding option
-    if (sldm_opts.od_json_interface_enabled == true)
-    {
-        jsonsrv.setServerPort(sldm_opts.od_json_interface_port);
-        if (jsonsrv.startServer() != true)
-        {
-            LogFatal("Critical error: cannot start the JSON server for data retrieval from other services.")
-            exit(EXIT_FAILURE);
-        }
-    }
-
+void
+eventLoop()
+{
     // Start the AMQP client event loop (additional clients, if requested by the user)
     std::vector<std::thread> amqp_x_threads;
 
     if (sldm_opts.num_amqp_x_enabled > 0)
     {
-        LogInfo("Additional AMQP clients will be used by the current instance of the S-LDM. Total number of AMQP clients (including the main one): " << sldm_opts.num_amqp_x_enabled + 1)
+        LogInfo(gLogTag << "Additional AMQP clients will be used by the current instance of the S-LDM. Total number of AMQP clients (including the main one): " << sldm_opts.num_amqp_x_enabled + 1)
 
         for (unsigned int i = 0; i < sldm_opts.num_amqp_x_enabled; i++)
         {
@@ -551,7 +468,7 @@ int main(int argc, char **argv)
 
     if (sldm_opts.amqp_broker_one.amqp_reconnect_after_local_timeout_expired == true)
     {
-        LogInfo("[AMQPClient 1] This client will be restarted if a local idle timeout error occurs.")
+        LogInfo(gLogTag << "[AMQPClient 1] This client will be restarted if a local idle timeout error occurs.")
     }
 
     // If this flag is set to true, the client will be restarted after an error, instead of being terminated
@@ -613,6 +530,114 @@ int main(int argc, char **argv)
             }
         }
     } while (cli_restart == true);
+}
+
+int main(int argc, char **argv)
+{
+    terminatorFlag = false;
+
+    // Thread attributes (unused, for the time being)
+    // pthread_attr_t tattr;
+
+    // First of all, parse the options
+    options_t sldm_opts;
+
+    // Read options from command line
+    options_initialize(&sldm_opts);
+    if (parse_options(argc, argv, &sldm_opts))
+    {
+        LogError("Error while parsing the options with the C options module.")
+        exit(EXIT_FAILURE);
+    }
+
+    const auto now = std::time(nullptr);
+
+    LogInfo("The S-LDM started at " << std::ctime(&now))
+    LogInfo("corresponding to GNTimestamp = " << get_timestamp_ms_gn())
+    LogInfo("S-LDM version: " << VERSION_STR)
+
+    // Print, as an example, the full (internal + external) area covered by the S-LDM
+    LogInfo("This S-LDM instance will cover the full area defined by: [" << sldm_opts.min_lat - sldm_opts.ext_lat_factor << "," << sldm_opts.min_lon - sldm_opts.ext_lon_factor << "],[" << sldm_opts.max_lat + sldm_opts.ext_lat_factor << "," << sldm_opts.max_lon + sldm_opts.ext_lon_factor << "]")
+    if (sldm_opts.cross_border_trigger == true)
+    {
+        LogInfo("Cross-border trigger mode enabled.")
+    }
+
+    /* ------------------------------------------------------------------------------------------------------------------------------------ */
+    /* ------------------------------------------------------------------------------------------------------------------------------------ */
+    /* ------------------------------------------------------------------------------------------------------------------------------------ */
+    /* ------------------------------------------------------------------------------------------------------------------------------------ */
+    /* ------------------------------------------------------------------------------------------------------------------------------------ */
+
+    // Create a new DB object
+    auto db_ptr = LDMMap::getInstance();
+
+    // Set a central latitude and longitude depending on the coverage area of the S-LDM (to be used only for visualization purposes -
+    // - it does not affect in any way the performance or the operations of the LDMMap DB module)
+    db_ptr->setCentralLatLon((sldm_opts.min_lat + sldm_opts.max_lat) / 2.0, (sldm_opts.min_lon + sldm_opts.max_lon) / 2.0);
+
+    // Before starting the AMQP client event loop, we should create a parallel thread, reading periodically
+    // (e.g. every 5 s) the database through the pointer "db_ptr" and "cleaning" the entries which are too old
+    auto dbCleanerThread = std::thread([db_ptr](){
+        DBcleaner(db_ptr);
+    });
+
+    // We should also start here a second parallel thread, reading periodically the database (e.g. every 500 ms) and sending the vehicle data to
+    // the vehicleVisualizer
+    vizOptions_t vizParams = {db_ptr, &sldm_opts};
+    auto vehVizThread = std::thread([ vizParams](){
+        VehVizUpdater(vizParams);
+    });
+
+    // Get the log file name from the options, if available, to enable log mode inside the AMQP client and the S-LDM modules
+    std::string logfile_name = "";
+    if (options_string_len(sldm_opts.logfile_name) > 0)
+    {
+        logfile_name = std::string(options_string_pop(sldm_opts.logfile_name));
+        if (logfile_name != "stdout")
+        {
+            time_t rawtime;
+            struct tm *timeinfo;
+            char buffer[25] = {"\0"};
+            time(&rawtime);
+            timeinfo = localtime(&rawtime);
+            strftime(buffer, 25, "-%Y%m%d-%H:%M:%S", timeinfo);
+            logfile_name += buffer;
+        }
+    }
+
+
+    // Create an indicatorTriggerManager object (the same object will be then accessed by all the AMQP clients, when using more than one client)
+    IndicatorTriggerManager itm(db_ptr, &sldm_opts);
+
+    if (sldm_opts.left_indicator_trg_enable == true)
+    {
+        itm.setLeftTurnIndicatorEnable(true);
+    }
+
+    auto filter_str = initializeAmqpFilter();
+
+    // -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
+    // Create the main AMQP client object
+    AMQPClient mainRecvClient(std::string(options_string_pop(sldm_opts.amqp_broker_one.broker_url)), std::string(options_string_pop(sldm_opts.amqp_broker_one.broker_topic)), sldm_opts.min_lat, sldm_opts.max_lat, sldm_opts.min_lon, sldm_opts.max_lon, &sldm_opts, db_ptr, logfile_name);
+
+
+    // Create the JSONserver object for the on-demand JSON-over-TCP interface
+    JSONserver jsonsrv(db_ptr);
+
+    // Start the on-demand JSON-over-TCP interface if enabled through the corresponding option
+    if (sldm_opts.od_json_interface_enabled == true)
+    {
+        jsonsrv.setServerPort(sldm_opts.od_json_interface_port);
+        if (jsonsrv.startServer() != true)
+        {
+            LogFatal("Critical error: cannot start the JSON server for data retrieval from other services.")
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    eventLoop();
 
     dbCleanerThread.join();
     vehVizThread.join();
