@@ -9,13 +9,16 @@
  * 
  */
 
-#include "shbheader.h"
-
+#include <common/log.h>
 #include <cstring>
+#include "shbheader.h"
 
 namespace etsiDecoder
 {
-    shbHeader::shbHeader() = default;
+    shbHeader::shbHeader()
+    {
+        log4cplus::NDCContextCreator context(LOG4CPLUS_TEXT("SbhHeader"));
+    }
 
     shbHeader::~shbHeader() = default;
 

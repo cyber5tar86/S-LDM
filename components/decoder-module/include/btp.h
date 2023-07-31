@@ -12,6 +12,7 @@
 #ifndef BTP_H
 #define BTP_H
 
+#include <common/log.h>
 #include <cstdint>
 #include <cstring>
 #include "btpheader.h"
@@ -36,20 +37,20 @@ namespace etsiDecoder
  * @brief 
  * 
  */
-class btp
+class Btp
 {
 public :
     /**
      * @brief Construct a new btp object
      * 
      */
-    btp();
+    Btp();
 
     /**
      * @brief Destroy the btp object
      * 
      */
-    ~btp();
+    ~Btp();
 
     /**
      * @brief 
@@ -59,6 +60,9 @@ public :
      * @return btpError_e 
      */
     btpError_e decodeBTP(GNDataIndication_t dataIndication, BTPDataIndication_t* btpDataIndication);
+
+private:
+    std::string mLogTag{"[Btp] "};
 };
 
 } // namespace etsiDecoder

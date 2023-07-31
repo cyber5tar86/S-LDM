@@ -4,6 +4,7 @@ project(s-ldm-components
     LANGUAGES C CXX
 )
 
+add_subdirectory(logger)
 add_subdirectory(asn1)
 add_subdirectory(decoder-module)
 add_subdirectory(options)

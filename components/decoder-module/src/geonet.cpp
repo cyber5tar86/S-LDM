@@ -9,13 +9,17 @@
  * 
  */
 
+#include <common/log.h>
 #include <iostream>
 #include "geonet.h"
 
 namespace etsiDecoder
 {
 
-GeoNet::GeoNet() = default;
+GeoNet::GeoNet()
+{
+    log4cplus::NDCContextCreator context(LOG4CPLUS_TEXT("GeoNet"));
+}
 
 GeoNet::~GeoNet() = default;
 

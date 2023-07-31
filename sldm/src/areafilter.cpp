@@ -1,16 +1,37 @@
-#include "v2x/facilities/ldm/areafilter.h"
+/**
+ * @file areafilter.cpp
+ * @author your name (you@domain.com)
+ * @brief 
+ * @version 0.1
+ * @date 2023-07-30
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
 
-#include <utility>
+#include <common/log.h>
+#include "areafilter.h"
+
+AreaFilterConfiguration::AreaFilterConfiguration() = default;
 
 AreaFilterConfiguration::AreaFilterConfiguration(const nlohmann::json &configuration)
 {
-    FromJson(configuration);
+    fromJson(configuration);
 }
 
 AreaFilterConfiguration::AreaFilterConfiguration(const std::string &configuration)
 {
-    FromString(configuration);
+    fromString(configuration);
 }
+
+AreaFilterConfiguration::AreaFilterConfiguration(double minLat, double minLon, double maxLat, double maxLon, double extLatFactor, double extLonFactor)
+    : mMinLat(minLat),
+      mMinLon(minLon),
+      mMaxLat(maxLat),
+      mMaxLon(maxLon),
+      mExtLatFactor(extLatFactor),
+      mExtLonFactor(extLonFactor)
+{}
 
 double &
 AreaFilterConfiguration::minLat()
@@ -49,13 +70,13 @@ AreaFilterConfiguration::extLonFactor()
 }
 
 std::string
-AreaFilterConfiguration::ToString() const
+AreaFilterConfiguration::toString() const
 {
     return to_string(toJson());
 }
 
 nlohmann::json
-AreaFilterConfiguration::ToJson() const
+AreaFilterConfiguration::toJson() const
 {
     return nlohmann::json{
         {AreaFilterConfigurationKeys::minLat, mMinLat},
@@ -68,13 +89,13 @@ AreaFilterConfiguration::ToJson() const
 }
 
 void
-AreaFilterConfiguration::FromString(const std::string &configuration)
+AreaFilterConfiguration::fromString(const std::string &configuration)
 {
     fromJson(nlohmann::json::parse(configuration));
 }
 
 void
-AreaFilterConfiguration::FromJson(const nlohmann::json &configuration)
+AreaFilterConfiguration::fromJson(const nlohmann::json &configuration)
 {
     mMinLat = configuration.at(AreaFilterConfigurationKeys::minLat);
     mMinLon = configuration.at(AreaFilterConfigurationKeys::minLon);
@@ -84,24 +105,20 @@ AreaFilterConfiguration::FromJson(const nlohmann::json &configuration)
     mExtLonFactor = configuration.at(AreaFilterConfigurationKeys::extLonFactor);
 }
 
-AreaFilter::AreaFilter(AreaFilterConfigurationPtr configuration)
-    : mConfiguration(std::move(configuration))
-{}
-
-AreaFilter::AreaFilter() = default;
-
-bool
-AreaFilter::setConfiguration(const AreaFilterConfigurationPtr &configuration)
+AreaFilter::AreaFilter()
 {
-    bool res{false};
+    log4cplus::NDCContextCreator context(LOG4CPLUS_TEXT("AreaFilter"));
+}
 
-    if (configuration != nullptr)
-    {
-        mConfiguration = configuration;
-        res = true;
-    }
+AreaFilter::AreaFilter(const AreaFilterConfiguration& configuration) : AreaFilter()
+{
+    mConfiguration = configuration;
+}
 
-    return res;
+void
+AreaFilter::setConfiguration(const AreaFilterConfiguration& configuration)
+{
+    mConfiguration = configuration;
 }
 
 bool
@@ -109,13 +126,10 @@ AreaFilter::isInside(double lat, double lon)
 {
     bool res{false};
 
-    if (mConfiguration != nullptr)
+    if (lat >= mConfiguration.minLat() - mConfiguration.extLatFactor() && lat <= mConfiguration.maxLat() + mConfiguration.extLatFactor() &&
+        lon >= mConfiguration.minLon() - mConfiguration.extLonFactor() && lon <= mConfiguration.maxLon() + mConfiguration.extLonFactor())
     {
-        if (lat >= mConfiguration->minLat() - mConfiguration->extLatFactor() && lat <= mConfiguration->maxLat() + mConfiguration->extLatFactor() &&
-            lon >= mConfiguration->minLon() - mConfiguration->extLonFactor() && lon <= mConfiguration->maxLon() + mConfiguration->extLonFactor())
-        {
-            res = true;
-        }
+        res = true;
     }
 
     return res;
@@ -126,13 +140,10 @@ AreaFilter::isInsideInternal(double lat, double lon)
 {
     bool res{false};
 
-    if (mConfiguration != nullptr)
+    if (lat >= mConfiguration.minLat() && lat <= mConfiguration.maxLat() &&
+        lon >= mConfiguration.minLon() && lon <= mConfiguration.maxLon())
     {
-        if (lat >= mConfiguration->minLat() && lat <= mConfiguration->maxLat() &&
-            lon >= mConfiguration->minLon() && lon <= mConfiguration->maxLon())
-        {
-            res = true;
-        }
+        res = true;
     }
 
     return false;

@@ -9,18 +9,22 @@
  * 
  */
 
+#include <common/log.h>
 #include <iostream>
 #include "btp.h"
 
 namespace etsiDecoder
 {
 
-btp::btp() = default;
+Btp::Btp()
+{
+    log4cplus::NDCContextCreator context(LOG4CPLUS_TEXT("Btp"));
+}
 
-btp::~btp() = default;
+Btp::~Btp() = default;
 
 btpError_e
-btp::decodeBTP(GNDataIndication_t dataIndication, BTPDataIndication_t *btpDataIndication)
+Btp::decodeBTP(GNDataIndication_t dataIndication, BTPDataIndication_t *btpDataIndication)
 {
     btpHeader header;
 
@@ -33,7 +37,7 @@ btp::decodeBTP(GNDataIndication_t dataIndication, BTPDataIndication_t *btpDataIn
 
     if ((header.getDestPort() != CA_PORT) && (header.getDestPort() != DEN_PORT))
     {
-        std::cerr << "[ERROR] [Decoder] BTP port not supported" << std::endl;
+        LogError("[Decoder] BTP port not supported");
         return BTP_ERROR;
     }
 
@@ -51,7 +55,7 @@ btp::decodeBTP(GNDataIndication_t dataIndication, BTPDataIndication_t *btpDataIn
     }
     else
     {
-        std::cerr << "[ERROR] [Decoder] Incorrect transport protocol " << std::endl;
+        LogError("[Decoder] Incorrect transport protocol ");
         return BTP_ERROR;
     }
 

@@ -9,6 +9,7 @@
  *
  */
 
+#include <common/log.h>
 #include "basicheader.h"
 
 namespace etsiDecoder
@@ -16,6 +17,8 @@ namespace etsiDecoder
 
 basicHeader::basicHeader()
 {
+    log4cplus::NDCContextCreator context(LOG4CPLUS_TEXT("BasicHeader"));
+
     m_version = 0;
     m_nextHeader = 0;
     m_reserved = 0;

@@ -9,12 +9,16 @@
  * 
  */
 
+#include <common/log.h>
 #include "btpheader.h"
 
 namespace etsiDecoder
 {
 
-btpHeader::btpHeader() = default;
+btpHeader::btpHeader()
+{
+    log4cplus::NDCContextCreator context(LOG4CPLUS_TEXT("BtpHeader"));
+}
 
 btpHeader::~btpHeader() = default;
 

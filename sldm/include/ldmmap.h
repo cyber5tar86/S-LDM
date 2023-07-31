@@ -19,13 +19,6 @@
 #include "phpoints.h"
 #include "vehicledatadef.h"
 
-/**
- * @brief 
- * 
- */
-class ldmmap::LDMMap;
-using LDMMapPtr = std::shared_ptr<ldmmap::LDMMap>;
-
 namespace ldmmap
 {
 
@@ -74,6 +67,14 @@ public:
      * 
      */
     ~LDMMap();
+
+    /**
+     * @brief Get an instance of LDMMap
+     * 
+     * @return std::shared_ptr<LDMMap> 
+     */
+    static std::shared_ptr<LDMMap>
+    getInstance();
 
     /**
      * @brief This function clears the whole database (to be used only when the dabatase and its content is not going to be accessed again)
@@ -237,5 +238,12 @@ private:
 };
 
 } // namespace ldmmap
+
+
+/**
+ * @brief 
+ * 
+ */
+using LDMMapPtr = std::shared_ptr<ldmmap::LDMMap>;
 
 #endif // LDMMAP_H

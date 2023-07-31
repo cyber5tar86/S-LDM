@@ -16,11 +16,6 @@
 #include <memory>
 #include <nlohmann/json.hpp>
 
-extern "C"
-{
-#include "options.h"
-}
-
 /**
  * @brief 
  * 
@@ -32,8 +27,8 @@ class AreaFilter;
  * @brief 
  * 
  */
-typedef std::shared_ptr<AreaFilterConfiguration> AreaFilterConfigurationPtr;
-typedef std::shared_ptr<AreaFilter> AreaFilterPtr;
+using AreaFilterConfigurationPtr = std::shared_ptr<AreaFilterConfiguration>;
+using AreaFilterPtr = std::shared_ptr<AreaFilter>;
 
 /**
  * @brief 
@@ -61,7 +56,7 @@ public:
      * @brief Construct a new Area Filter Configuration object
      * 
      */
-    AreaFilterConfiguration() = delete;
+    AreaFilterConfiguration();
 
     /**
      * @brief Construct a new Area Filter Configuration object
@@ -76,6 +71,18 @@ public:
      * @param configuration 
      */
     explicit AreaFilterConfiguration(const std::string &configuration);
+
+    /**
+     * @brief Construct a new Area Filter Configuration object
+     * 
+     * @param minLat_ 
+     * @param minLon_ 
+     * @param maxLat_ 
+     * @param maxLon_ 
+     * @param extLatFactor_ 
+     * @param extLonFactor_ 
+     */
+    AreaFilterConfiguration(double minLat_, double minLon_, double maxLat_, double maxLon_, double extLatFactor_, double extLonFactor_);
 
     /**
      * @brief Destroy the Area Filter Configuration object
@@ -168,29 +175,28 @@ private:
  * @brief 
  * 
  */
-class areaFilter
+class AreaFilter
 {
 public:
     /**
      * @brief Construct a new area Filter object
      * 
      */
-    areaFilter();
+    AreaFilter();
 
     /**
      * @brief Construct a new Area Filter object
      * 
      * @param configuration AreaFilter configuration
      */
-    explicit AreaFilter(AreaFilterConfigurationPtr configuration);
+    explicit AreaFilter(const AreaFilterConfiguration& configuration);
 
     /**
      * @brief Set the AreaFilter configuration object
-     *        This function expects the mConfiguration pointer to be non-nullptr, otherwise it always returns 'false'
      * 
      * @param configuration AreaFilter configuration
      */
-    void setConfiguration(const AreaFilterConfigurationPtr& configuration);
+    void setConfiguration(const AreaFilterConfiguration& configuration);
 
     /**
      * @brief This function expects the m_opts_ptr pointer to be non-NULL, otherwise it always returns 'false'
@@ -216,7 +222,7 @@ public:
     bool isInsideInternal(double lat, double lon);
 
 private:
-    AreaFilterConfigurationPtr mConfiguration{nullptr}; //!<
+    AreaFilterConfiguration mConfiguration; //!<
 };
 
 #endif // AREAFILTER_H

@@ -9,18 +9,22 @@
  * 
  */
 
+#include <common/log.h>
 #include "gbcheader.h"
 
 namespace etsiDecoder
 {
 
-gbcHeader::gbcHeader() = default;
+gbcHeader::gbcHeader()
+{
+    log4cplus::NDCContextCreator context(LOG4CPLUS_TEXT("GbcHeader"));
+}
 
 gbcHeader::~gbcHeader() = default;
 
-void gbcHeader::removeHeader(unsigned char *buffer)
+void
+gbcHeader::removeHeader(unsigned char *buffer)
 {
-
     // Sequence Number
     memcpy(&m_seqNumber, buffer, sizeof(uint16_t));
     buffer += 2;

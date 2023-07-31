@@ -33,11 +33,11 @@ class SLDMRecipe(ConanFile):
         self.requires("cpprestsdk/2.10.18")
         self.requires("geographiclib/1.52")
         self.requires("nlohmann_json/3.11.2")
-        self.requires("spdlog/1.12.0")
+        self.requires("log4cplus/2.1.0")
 
     def generate(self):
         tc = CMakeToolchain(self)
-        tc.user_presets_path = False
+        #tc.user_presets_path = False
         tc.generate()
         deps = CMakeDeps(self)
         deps.generate()

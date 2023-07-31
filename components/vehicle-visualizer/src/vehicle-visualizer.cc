@@ -10,6 +10,7 @@
  */
 
 #include <arpa/inet.h>
+#include <common/log.h>
 #include <fcntl.h>
 #include <iostream>
 #include <netinet/in.h>
@@ -21,50 +22,23 @@
 #include <unistd.h>
 #include "vehicle-visualizer.h"
 
-vehicleVisualizer::vehicleVisualizer()
+VehicleVisualizer::VehicleVisualizer()
 {
-    // Set default ip and port
-    m_ip = "127.0.0.1";
-    m_port = 48110;
-
-    // Set the default HTTP Node.js server port
-    m_httpport = 8080;
-
-    m_is_connected = false;
-    m_is_map_sent = false;
-    m_is_server_active = false;
-    m_serverpath = DEFAULT_NODEJS_SERVER_PATH;
+    log4cplus::NDCContextCreator context(LOG4CPLUS_TEXT("VehicleVisualizer"));
 }
 
-vehicleVisualizer::vehicleVisualizer(int port)
+VehicleVisualizer::VehicleVisualizer(int port) : VehicleVisualizer()
 {
-    // Set default ip
-    m_ip = "127.0.0.1";
     m_port = port;
-
-    // Set the default HTTP Node.js server port
-    m_httpport = 8080;
-
-    m_is_connected = false;
-    m_is_map_sent = false;
-    m_is_server_active = false;
-    m_serverpath = DEFAULT_NODEJS_SERVER_PATH;
 }
 
-vehicleVisualizer::vehicleVisualizer(int port, std::string ipv4)
+VehicleVisualizer::VehicleVisualizer(int port, std::string address) : VehicleVisualizer()
 {
-    m_ip = ipv4;
     m_port = port;
-
-    m_httpport = 8080;
-
-    m_is_connected = false;
-    m_is_map_sent = false;
-    m_is_server_active = false;
-    m_serverpath = DEFAULT_NODEJS_SERVER_PATH;
+    m_address = std::move(address);
 }
 
-vehicleVisualizer::~vehicleVisualizer()
+VehicleVisualizer::~VehicleVisualizer()
 {
     // The destructor will attempt to send a termination message to the Node.js server only if a server
     // was successfully started with startServer()
@@ -82,7 +56,7 @@ vehicleVisualizer::~vehicleVisualizer()
 }
 
 int
-vehicleVisualizer::connectToServer()
+VehicleVisualizer::connectToServer()
 {
     m_sockfd = socketOpen();
 
@@ -97,17 +71,17 @@ vehicleVisualizer::connectToServer()
 }
 
 int
-vehicleVisualizer::sendMapDraw(double lat, double lon)
+VehicleVisualizer::sendMapDraw(double lat, double lon)
 {
     if (m_is_connected == false)
     {
-        std::cerr << "Error: attempted to use a non-connected vehicle visualizer client." << std::endl;
+        LogError("Error: attempted to use a non-connected vehicle visualizer client.")
         exit(EXIT_FAILURE);
     }
 
     if (m_is_map_sent == true)
     {
-        std::cerr << "Error in vehicle visualizer client: attempted to send twice a map draw message. This is not allowed." << std::endl;
+        LogError("Error in vehicle visualizer client: attempted to send twice a map draw message. This is not allowed.")
         exit(EXIT_FAILURE);
     }
 
@@ -131,17 +105,17 @@ vehicleVisualizer::sendMapDraw(double lat, double lon)
 }
 
 int
-vehicleVisualizer::sendMapDraw(double lat, double lon, double minlat, double minlon, double maxlat, double maxlon, double lat_ext_factor, double lon_ext_factor)
+VehicleVisualizer::sendMapDraw(double lat, double lon, double minlat, double minlon, double maxlat, double maxlon, double lat_ext_factor, double lon_ext_factor)
 {
     if (m_is_connected == false)
     {
-        std::cerr << "Error: attempted to use a non-connected vehicle visualizer client." << std::endl;
+        LogError("Error: attempted to use a non-connected vehicle visualizer client.")
         exit(EXIT_FAILURE);
     }
 
     if (m_is_map_sent == true)
     {
-        std::cerr << "Error in vehicle visualizer client: attempted to send twice a map draw message. This is not allowed." << std::endl;
+        LogError("Error in vehicle visualizer client: attempted to send twice a map draw message. This is not allowed.")
         exit(EXIT_FAILURE);
     }
 
@@ -165,17 +139,17 @@ vehicleVisualizer::sendMapDraw(double lat, double lon, double minlat, double min
 }
 
 int
-vehicleVisualizer::sendObjectUpdate(std::string objID, double lat, double lon, int stationType, double heading)
+VehicleVisualizer::sendObjectUpdate(std::string objID, double lat, double lon, int stationType, double heading)
 {
     if (m_is_connected == false)
     {
-        std::cerr << "Error: attempted to use a non-connected vehicle visualizer client." << std::endl;
+        LogError("Error: attempted to use a non-connected vehicle visualizer client.")
         exit(EXIT_FAILURE);
     }
 
     if (m_is_map_sent == false)
     {
-        std::cerr << "Error in vehicle visualizer client: attempted to send an object update before sending the map draw message." << std::endl;
+        LogError("Error in vehicle visualizer client: attempted to send an object update before sending the map draw message.")
         exit(EXIT_FAILURE);
     }
 
@@ -199,23 +173,23 @@ vehicleVisualizer::sendObjectUpdate(std::string objID, double lat, double lon, i
 }
 
 int
-vehicleVisualizer::sendObjectUpdate(std::string objID, double lat, double lon, int stationType)
+VehicleVisualizer::sendObjectUpdate(std::string objID, double lat, double lon, int stationType)
 {
     return sendObjectUpdate(objID, lat, lon, stationType, VIS_HEADING_INVALID);
 }
 
 int
-vehicleVisualizer::sendObjectClean(std::string objID)
+VehicleVisualizer::sendObjectClean(std::string objID)
 {
     if (m_is_connected == false)
     {
-        std::cerr << "Error: attempted to use a non-connected vehicle visualizer client." << std::endl;
+        LogError("Error: attempted to use a non-connected vehicle visualizer client.")
         exit(EXIT_FAILURE);
     }
 
     if (m_is_map_sent == false)
     {
-        std::cerr << "Error in vehicle visualizer client: attempted to send an object clean message before sending the map draw message." << std::endl;
+        LogError("Error in vehicle visualizer client: attempted to send an object clean message before sending the map draw message.")
         exit(EXIT_FAILURE);
     }
 
@@ -236,7 +210,7 @@ vehicleVisualizer::sendObjectClean(std::string objID)
 }
 
 int
-vehicleVisualizer::startServer()
+VehicleVisualizer::startServer()
 {
     std::string servercmd;
 
@@ -254,14 +228,14 @@ vehicleVisualizer::startServer()
     {
         if (errno != EEXIST)
         {
-            std::cerr << "Cannot start the Node.js server. mkfifo() communication pipe creation error." << std::endl;
+            LogError("Cannot start the Node.js server. mkfifo() communication pipe creation error.")
             perror("Error details:");
             exit(EXIT_FAILURE);
         }
     }
     else
     {
-        std::cout << "VehicleVisualizer startup: using temporary FIFO special file: " << fifofile << std::endl;
+        LogInfo("VehicleVisualizer startup: using temporary FIFO special file: " << fifofile)
     }
 
     // Open the FIFO file (O_RDWR is needed, instead of O_RDONLY, to avoid blocking on this open() due to the absence of a writer.
@@ -270,7 +244,7 @@ vehicleVisualizer::startServer()
 
     if (fifofd < 0)
     {
-        std::cerr << "Cannot start the Node.js server. mkfifo() communication pipe error." << std::endl;
+        LogError("Cannot start the Node.js server. mkfifo() communication pipe error.")
         exit(EXIT_FAILURE);
     }
 
@@ -279,30 +253,30 @@ vehicleVisualizer::startServer()
 
     if (nodeCheckRval != 0)
     {
-        std::cerr << "Error. Node.js does not seem to be installed. Please install it before using the S-LDM vehicle visualizer." << std::endl;
+        LogError("Error. Node.js does not seem to be installed. Please install it before using the S-LDM vehicle visualizer.")
         exit(EXIT_FAILURE);
     }
 
-    // servercmd = "node " + m_serverpath + " " + std::to_string(m_httpport) + " &";
+    // servercmd = "node " + m_serverpath + " " + std::to_string(m_httpPort) + " &";
 
     // node.js server (server.js) command line parameters: HTTP web interface port, UDP socket bind address, UDP socket port, PID of this S-LDM instance
-    servercmd = "node " + m_serverpath + " " + std::to_string(m_httpport) + " " + m_ip + " " + std::to_string(m_port) + " " + std::to_string(getpid()) + " &";
+    servercmd = "node " + m_serverpath + " " + std::to_string(m_httpPort) + " " + m_address + " " + std::to_string(m_port) + " " + std::to_string(getpid()) + " &";
 
     int startCmdRval = std::system(servercmd.c_str());
 
     // If the result is 0, system() was able to successfully launch the command (which may fail afterwards, though)
     if (startCmdRval == 0)
     {
-        std::cout << "Used the following command to start up the vehicle visualizer Node.js server: " << servercmd << std::endl;
+        LogInfo("Used the following command to start up the vehicle visualizer Node.js server: " << servercmd)
         m_is_server_active = true;
     }
     else
     {
-        std::cerr << "Cannot send the command for starting the Node.js server." << std::endl;
+        LogError("Cannot send the command for starting the Node.js server.")
         exit(EXIT_FAILURE);
     }
 
-    std::cout << "VehicleVisualizer startup: Waiting for the VehicleVisualizer node.js server to come up..." << std::endl;
+    LogInfo("VehicleVisualizer startup: Waiting for the VehicleVisualizer node.js server to come up...")
 
     // Wait 1 second for the server to come up (no more needed since the FIFO special file mechanism is in place)
     // sleep(1);
@@ -314,11 +288,11 @@ vehicleVisualizer::startServer()
     char buf[8] = {0};
     if (read(fifofd, buf, 8) <= 0)
     {
-        std::cout << "Error. It seems that the node.js server could not come up." << std::endl;
+        LogInfo("Error. It seems that the node.js server could not come up.")
     }
     else
     {
-        std::cout << "VehicleVisualizer node.js server succesfully started. Confirmation message content: " << std::string(buf) << std::endl;
+        LogInfo("VehicleVisualizer node.js server succesfully started. Confirmation message content: " << std::string(buf))
     }
 
     // Close and delete (with unlink(), as there should be no other process referring to the same file) the FIFO special file which was used as
@@ -330,11 +304,11 @@ vehicleVisualizer::startServer()
 }
 
 int
-vehicleVisualizer::terminateServer()
+VehicleVisualizer::terminateServer()
 {
     if (m_is_connected == false)
     {
-        std::cerr << "Error: attempted to use a non-connected vehicle visualizer client." << std::endl;
+        LogError("Error: attempted to use a non-connected vehicle visualizer client.")
         exit(EXIT_FAILURE);
     }
 
@@ -353,7 +327,7 @@ vehicleVisualizer::terminateServer()
 }
 
 int
-vehicleVisualizer::socketOpen(void)
+VehicleVisualizer::socketOpen(void)
 {
     struct sockaddr_in saddr = {};
     struct in_addr destIPaddr;
@@ -363,8 +337,7 @@ vehicleVisualizer::socketOpen(void)
 
     if (sockfd < 0)
     {
-        perror("socket() error:");
-        std::cerr << "Error! Cannot open the UDP socket for the vehicle visualizer." << std::endl;
+        LogError("Error! Cannot open the UDP socket for the vehicle visualizer.")
         exit(EXIT_FAILURE);
     }
 
@@ -375,16 +348,14 @@ vehicleVisualizer::socketOpen(void)
 
     if (bind(sockfd, (struct sockaddr *)&(saddr), sizeof(saddr)) < 0)
     {
-        perror("Cannot bind socket: bind() error");
-        std::cerr << "Error! Cannot bind the UDP socket for the vehicle visualizer." << std::endl;
+        LogError("Error! Cannot bind the UDP socket for the vehicle visualizer.")
         exit(EXIT_FAILURE);
     }
 
     // Get struct in_addr corresponding to the destination IP address
-    if (inet_pton(AF_INET, m_ip.c_str(), &(destIPaddr)) != 1)
+    if (inet_pton(AF_INET, m_address.c_str(), &(destIPaddr)) != 1)
     {
-        fprintf(stderr, "Error in parsing the destination IP address.\n");
-        std::cerr << "Error! Cannot parse the destination IP for the UDP socket for the vehicle visualizer." << std::endl;
+        LogError("Error! Cannot parse the destination IP for the UDP socket for the vehicle visualizer.")
         exit(EXIT_FAILURE);
     }
 
@@ -394,8 +365,7 @@ vehicleVisualizer::socketOpen(void)
 
     if (connect(sockfd, (struct sockaddr *)&(saddr), sizeof(saddr)) < 0)
     {
-        perror("Cannot connect socket: connect() error");
-        std::cerr << "Error! Cannot connect the UDP socket for the vehicle visualizer." << std::endl;
+        LogError("Error! Cannot connect the UDP socket for the vehicle visualizer.")
         exit(EXIT_FAILURE);
     }
 
@@ -403,7 +373,13 @@ vehicleVisualizer::socketOpen(void)
 }
 
 void
-vehicleVisualizer::setPort(int port)
+VehicleVisualizer::setAddress(std::string address)
+{
+    m_address = std::move(address);
+}
+
+void
+VehicleVisualizer::setPort(int port)
 {
     // Set the default port when an invalid port is specified
     if (port >= 1 && port <= 65535)
@@ -412,22 +388,22 @@ vehicleVisualizer::setPort(int port)
     }
     else
     {
-        std::cerr << "Error: called setPort for vehicleVisualizer with an invalid port number. Using the default port." << std::endl;
+        LogError("Error: called setPort for vehicleVisualizer with an invalid port number. Using the default port.")
         m_port = 48110;
     }
 }
 
 void
-vehicleVisualizer::setHTTPPort(int port)
+VehicleVisualizer::setHTTPPort(int port)
 {
     // Set the default port when an invalid port is specified
     if (port >= 1 && port <= 65535)
     {
-        m_httpport = port;
+        m_httpPort = port;
     }
     else
     {
-        std::cerr << "Error: called setPort for vehicleVisualizer with an invalid port number. Using the default port." << std::endl;
-        m_httpport = 8080;
+        LogError("Error: called setPort for vehicleVisualizer with an invalid port number. Using the default port.")
+        m_httpPort = 8080;
     }
 }
