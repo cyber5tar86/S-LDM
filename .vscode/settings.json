@@ -4,5 +4,5 @@
         "thread": "cpp",
         "atomic": "cpp"
     },
-    "sonarlint.pathToCompileCommands": "${workspaceFolder}/build/Release/compile_commands.json"
+    "sonarlint.pathToCompileCommands": "${workspaceFolder}/build/Debug/compile_commands.json"
 }

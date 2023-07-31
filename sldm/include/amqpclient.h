@@ -51,10 +51,10 @@ public:
      * @param configuration 
      * @param db 
      */
-    AMQPClient(const AMQPClientConfiguration& amqpClientConfiguration, const AreaFilterConfiguration& areaFilterConfiguration, LDMMapPtr &db) : AMQPClient()
+    AMQPClient(AMQPClientConfiguration amqpClientConfiguration, AreaFilterConfiguration areaFilterConfiguration, LDMMapPtr &db) : AMQPClient()
     {
-        m_areaFilter.setConfiguration(areaFilterConfiguration);
-        m_configuration(amqpClientConfiguration);
+        m_areaFilter.setConfiguration(std::move(areaFilterConfiguration));
+        m_configuration = std::move(amqpClientConfiguration);
     }
 
     /**

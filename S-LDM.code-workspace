@@ -8,5 +8,15 @@
             "name": "S-LDM backend",
             "path": "./sldm"
         }
-    ]
+    ],
+    "settings": {
+        "files.associations": {
+            "array": "cpp",
+            "*.tcc": "cpp",
+            "istream": "cpp",
+            "tuple": "cpp",
+            "utility": "cpp",
+            "variant": "cpp"
+        }
+    }
 }
