@@ -6,7 +6,7 @@ project(vehicle-visualizer
     DESCRIPTION "Vehicle Visualizer"
 )
 
-add_library(${PROJECT_NAME})
+add_library(${PROJECT_NAME} OBJECT)
 
 target_sources(${PROJECT_NAME} PRIVATE
     src/vehicle-visualizer.cc

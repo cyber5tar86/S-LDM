@@ -10,7 +10,7 @@
         {
             "label": "Coverage - [x86_64]",
             "type": "shell",
-            "command": ["/usr/bin/cmake --build build.x86_64 --target mistlib_coverage"],
+            "command": ["/usr/bin/cmake --build build.x86_64 --target ldm_coverage"],
             "dependsOn": [ "Build - [x86_64]" ],
             "presentation": { "clear": true }
         },

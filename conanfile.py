@@ -35,9 +35,12 @@ class SLDMRecipe(ConanFile):
         self.requires("nlohmann_json/3.11.2")
         self.requires("log4cplus/2.1.0")
 
+    def configure(self):
+        self.options['log4cplus'].unicode = False
+
     def generate(self):
         tc = CMakeToolchain(self)
-        #tc.user_presets_path = False
+        tc.user_presets_path = False
         tc.generate()
         deps = CMakeDeps(self)
         deps.generate()

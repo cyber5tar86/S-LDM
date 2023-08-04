@@ -6,7 +6,7 @@ project(asn1
     DESCRIPTION "ASN.1 C-ITS ETSI"
 )
 
-add_library(${PROJECT_NAME})
+add_library(${PROJECT_NAME} OBJECT)
 
 target_sources(${PROJECT_NAME} PRIVATE
     src/AccelerationConfidence.c

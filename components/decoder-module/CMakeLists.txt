@@ -6,7 +6,7 @@ project(decoder-module
     DESCRIPTION "Decoder Module"
 )
 
-add_library(${PROJECT_NAME})
+add_library(${PROJECT_NAME} OBJECT)
 
 target_sources(${PROJECT_NAME} PRIVATE
     src/basicheader.cpp

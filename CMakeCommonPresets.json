@@ -10,7 +10,7 @@
             "name": "common.provider.conan",
             "description":"",
             "hidden": true,
-            "toolchainFile": "${sourceDir}/build/conan/conan_toolchain.cmake"
+            "toolchainFile": "${sourceDir}/build/${presetName}/generators/conan_toolchain.cmake"
         },
         {
             "name": "common.provider.system",

@@ -17,7 +17,7 @@
             ]
         },
         {
-            "name": "release",
+            "name": "Release",
             "description": "Build the application in Release mode",
             "inherits": [
                 "common.build.type.release",
@@ -25,7 +25,7 @@
             ]
         },
         {
-            "name": "debug",
+            "name": "Debug",
             "description": "Build the application in Debug mode",
             "inherits": [
                 "common.build.type.debug",
@@ -35,22 +35,59 @@
     ],
     "buildPresets": [
         {
-            "name": "release",
-            "configurePreset": "release"
+            "name": "Release",
+            "configurePreset": "Release"
         },
         {
-            "name": "debug",
-            "configurePreset": "debug"
+            "name": "Debug",
+            "configurePreset": "Debug"
+        }
+    ],
+    "testPresets": [
+        {
+          "name": "Debug",
+          "configurePreset": "Debug",
+          "output": {"outputOnFailure": true},
+          "execution": {"noTestsAction": "error", "stopOnFailure": true}
+        },
+        {
+            "name": "Release",
+            "configurePreset": "Release",
+            "output": {"outputOnFailure": true},
+            "execution": {"noTestsAction": "error", "stopOnFailure": true}
         }
     ],
     "packagePresets": [
         {
-            "name": "release",
-            "configurePreset": "release"
+            "name": "Release",
+            "configurePreset": "Release"
         },
         {
-            "name": "debug",
-            "configurePreset": "debug"
+            "name": "Debug",
+            "configurePreset": "Debug"
+        }
+    ],
+    "workflowPresets": [
+        {
+            "name": "Debug",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "Debug"
+                },
+                {
+                    "type": "build",
+                    "name": "Debug"
+                },
+                {
+                    "type": "test",
+                    "name": "Debug"
+                },
+                {
+                    "type": "package",
+                    "name": "Debug"
+                }
+            ]
         }
     ]
 } 

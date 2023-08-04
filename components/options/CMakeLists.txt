@@ -6,7 +6,7 @@ project(options
     DESCRIPTION "Options"
 )
 
-add_library(${PROJECT_NAME})
+add_library(${PROJECT_NAME} OBJECT)
 
 target_sources(${PROJECT_NAME} PRIVATE
     src/options_strings.c
