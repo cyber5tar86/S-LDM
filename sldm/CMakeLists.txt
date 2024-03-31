@@ -13,6 +13,7 @@ find_package(cpprestsdk REQUIRED)
 find_package(GeographicLib REQUIRED)
 find_package(nlohmann_json REQUIRED CONFIG)
 find_package(log4cplus REQUIRED)
+find_package(qpid-proton REQUIRED)
 #find_package(s-ldm-components REQUIRED CONFIG COMPONENTS asn1 decoder-module options vehicle-visualizer)
 
 add_executable(${PROJECT_NAME})

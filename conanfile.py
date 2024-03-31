@@ -29,18 +29,20 @@ class SLDMRecipe(ConanFile):
 
     def requirements(self):
         self.requires("amqp-cpp/4.3.24")
-        self.requires("boost/1.81.0")
-        self.requires("cpprestsdk/2.10.18")
-        self.requires("geographiclib/1.52")
-        self.requires("nlohmann_json/3.11.2")
-        self.requires("log4cplus/2.1.0")
+        self.requires("qpid-proton/0.39.0")
+        self.requires("boost/1.83.0")
+        self.requires("cpprestsdk/2.10.19")
+        self.requires("geographiclib/2.3")
+        self.requires("nlohmann_json/3.11.3")
+        self.requires("log4cplus/2.1.1")
+        self.requires("json-schema-validator/2.3.0")
 
     def configure(self):
         self.options['log4cplus'].unicode = False
 
     def generate(self):
         tc = CMakeToolchain(self)
-        tc.user_presets_path = False
+        #tc.user_presets_path = False
         tc.generate()
         deps = CMakeDeps(self)
         deps.generate()
