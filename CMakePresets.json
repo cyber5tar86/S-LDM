@@ -2,13 +2,50 @@
     "version": 6,
     "cmakeMinimumRequired": {
         "major": 3,
-        "minor": 23,
+        "minor": 29,
         "patch": 0
     },
-    "include": [
-        "CMakeCommonPresets.json"
-    ],
     "configurePresets": [
+        {
+            "name": "common.provider.conan",
+            "description":"",
+            "hidden": true,
+            "toolchainFile": "${sourceDir}/build/${presetName}/generators/conan_toolchain.cmake"
+        },
+        {
+            "name": "common.provider.system",
+            "description":"",
+            "hidden": true
+        },
+        {
+            "name": "base-ninja",
+            "displayName": "Default Config",
+            "description": "Default build using Ninja generator",
+            "generator": "Ninja",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+            }
+        },
+        {
+            "name": "base-ninja-multi",
+            "displayName": "Ninja Multi-Config",
+            "description": "Default build using Ninja Multi-Config generator",
+            "generator": "Ninja Multi-Config",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                "CMAKE_CONFIGURATION_TYPES": "Debug;Release;RelWithDebInfo;MinSizeRel"
+            }
+        },
+        {
+            "name": "common.flags",
+            "description": "",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_CXX_FLAGS": "-Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Wcast-qual -Wshadow -Wformat=2 -Wundef -Werror=float-equal"
+            }
+        },
         {
             "name": "dependencies-provider",
             "hidden": true,
@@ -17,75 +54,53 @@
             ]
         },
         {
-            "name": "Release",
-            "description": "Build the application in Release mode",
+            "name": "build",
+            "description": "Build the application",
             "inherits": [
-                "common.build.type.release",
                 "dependencies-provider"
-            ]
-        },
-        {
-            "name": "Debug",
-            "description": "Build the application in Debug mode",
-            "inherits": [
-                "common.build.type.debug",
-                "dependencies-provider"
-            ]
+            ],
+            "binaryDir": "${sourceDir}/build/${presetName}"
         }
     ],
     "buildPresets": [
         {
-            "name": "Release",
-            "configurePreset": "Release"
-        },
-        {
-            "name": "Debug",
-            "configurePreset": "Debug"
+            "name": "build",
+            "configurePreset": "Build"
         }
     ],
     "testPresets": [
         {
-          "name": "Debug",
-          "configurePreset": "Debug",
+          "name": "Build",
+          "configurePreset": "build",
           "output": {"outputOnFailure": true},
           "execution": {"noTestsAction": "error", "stopOnFailure": true}
-        },
-        {
-            "name": "Release",
-            "configurePreset": "Release",
-            "output": {"outputOnFailure": true},
-            "execution": {"noTestsAction": "error", "stopOnFailure": true}
         }
     ],
     "packagePresets": [
         {
-            "name": "Release",
-            "configurePreset": "Release"
-        },
-        {
-            "name": "Debug",
-            "configurePreset": "Debug"
+            "name": "Build",
+            "configurePreset": "build"
         }
     ],
     "workflowPresets": [
         {
-            "name": "Debug",
+            "name": "Build",
             "steps": [
                 {
                     "type": "configure",
-                    "name": "Debug"
+                    "name": "build"
                 },
                 {
                     "type": "build",
-                    "name": "Debug"
+                    "name": "build"
                 },
                 {
                     "type": "test",
-                    "name": "Debug"
+                    "name": "build"
                 },
                 {
                     "type": "package",
-                    "name": "Debug"
+                    "name": "build"
                 }
             ]
         }
