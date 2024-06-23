@@ -1,13 +1,14 @@
 cmake_minimum_required(VERSION 3.15)
 
-project(s-ldm-components
+project(s-ldm
+    VERSION 1.0.0
     LANGUAGES C CXX
 )
 
 # add the folder 'cmake' to the available modules
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-include(qtqnxframeworkDependencies.cmake)
+include(sldmDependencies.cmake)
 
 add_subdirectory(logger)
 add_subdirectory(asn1)

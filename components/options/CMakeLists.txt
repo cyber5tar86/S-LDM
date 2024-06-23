@@ -14,7 +14,7 @@ set_target_properties(${TARGET_NAME}
         POSITION_INDEPENDENT_CODE ON
 )
 
-target_sources(${PROJECT_NAME}
+target_sources(${TARGET_NAME}
     PUBLIC
         FILE_SET publicHeaders
         TYPE HEADERS
@@ -26,7 +26,7 @@ target_sources(${PROJECT_NAME}
             src/options.c
 )
 
-target_include_directories(${PROJECT_NAME}
+target_include_directories(${TARGET_NAME}
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>

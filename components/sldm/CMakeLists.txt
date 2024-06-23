@@ -12,7 +12,7 @@ set_target_properties(${TARGET_NAME}
         EXPORT_NAME ${COMPONENT_NAME}
 )
 
-target_sources(${PROJECT_NAME}
+target_sources(${TARGET_NAME}
     PUBLIC
         FILE_SET publicHeaders
         TYPE HEADERS
@@ -50,20 +50,20 @@ target_include_directories(${TARGET_NAME}
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-target_link_libraries(${PROJECT_NAME}
+target_link_libraries(${TARGET_NAME}
     PRIVATE
         boost::boost
         crypto
         cpprestsdk::cpprest
-        sldm::logger
+        s-ldm::logger
         m
         nlohmann_json::nlohmann_json
         pthread
         qpid-proton-cpp
         GeographicLib::GeographicLib
-        sldm::decoder-module
-        sldm::options
-        sldm::vehicle-visualizer
+        s-ldm::decoder-module
+        s-ldm::options
+        s-ldm::vehicle-visualizer
 )
 
 # CheckCCompilerFlag serves to check if the compiler supports a given flag

@@ -19,18 +19,18 @@ target_sources(${TARGET_NAME}
         FILE_SET publicHeaders
         TYPE HEADERS
         FILES
-            include/log.hpp
+            include/common/log.h
     PRIVATE
             src/log.cpp
 )
 
-target_include_directories(${PROJECT_NAME}
+target_include_directories(${TARGET_NAME}
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-target_link_libraries(${PROJECT_NAME}
+target_link_libraries(${TARGET_NAME}
     PUBLIC
         log4cplus::log4cplus
 )
