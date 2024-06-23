@@ -1,8 +1,8 @@
 {
-    "files.associations": {
-        "thread": "cpp",
-        "atomic": "cpp"
-    },
-    "sarif-viewer.connectToGithubCodeScanning": "off",
-    "sonarlint.pathToCompileCommands": "${workspaceFolder}/build/Debug/compile_commands.json"
+  "files.associations": {
+    "thread": "cpp",
+    "atomic": "cpp"
+  },
+  "sarif-viewer.connectToGithubCodeScanning": "off",
+  "sonarlint.pathToCompileCommands": "${workspaceFolder}/build/Debug/compile_commands.json"
 }

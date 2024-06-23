@@ -1,53 +1,53 @@
 {
-    "areaParameters": {
-        "minLatitude": 0.0,
-        "minLongitude": 0.0,
-        "maxLatitude": 0.0,
-        "maxLongitude": 0.0,
-        "extendedLatitudeFactor": 0.0,
-        "extendedLongitudeFactor": 0.0
-    },
-    "triggers": {
-        "indicatorTriggerManager": true,
-        "crossBorder": true,
-        "leftIndicator": true
-    },
-    "hijacks": {
-        "exteriorLights": true,
-        "interop": true
-    },
-    "maneuveringService": {
-        "address": "http://localhost",
-        "port": 8000,
-        "periodicity": 1.0
-    },
-    "vehicleVisualizer": {
-        "udpAddress": "127.0.0.1",
-        "udpPort": 48110,
-        "webPort": 8080,
-        "updateIntervalSeconds": 0.5
-    },
-    "amqp": {
-        "enableQuadKFilter": true,
-        "gnTimestampProperty": "gn_ts",
-        "maxAdditionalClients": 10,
-        "clientConfiguration": {
-            "username": "",
-            "password": "",
-            "reconnect": true,
-            "allowSasl": true,
-            "allowInsecure": true,
-            "brokerUrl": "",
-            "brokerTopic": "",
-            "brokerQueue": "",
-            "idleTimeout": 1000,
-            "reconnectAfterLocalTimeoutExpired": true
-        }
-    },
-    "odJsonOverTcp": {
-        "enable": true,
-        "port": 8080
-    },
-    "contextRadius": 0.0,
-    "enableAgeCheck": true
+  "areaParameters": {
+    "minLatitude": 0.0,
+    "minLongitude": 0.0,
+    "maxLatitude": 0.0,
+    "maxLongitude": 0.0,
+    "extendedLatitudeFactor": 0.0,
+    "extendedLongitudeFactor": 0.0
+  },
+  "triggers": {
+    "indicatorTriggerManager": true,
+    "crossBorder": true,
+    "leftIndicator": true
+  },
+  "hijacks": {
+    "exteriorLights": true,
+    "interop": true
+  },
+  "maneuveringService": {
+    "address": "http://localhost",
+    "port": 8000,
+    "periodicity": 1.0
+  },
+  "vehicleVisualizer": {
+    "udpAddress": "127.0.0.1",
+    "udpPort": 48110,
+    "webPort": 8080,
+    "updateIntervalSeconds": 0.5
+  },
+  "amqp": {
+    "enableQuadKFilter": true,
+    "gnTimestampProperty": "gn_ts",
+    "maxAdditionalClients": 10,
+    "clientConfiguration": {
+      "username": "",
+      "password": "",
+      "reconnect": true,
+      "allowSasl": true,
+      "allowInsecure": true,
+      "brokerUrl": "",
+      "brokerTopic": "",
+      "brokerQueue": "",
+      "idleTimeout": 1000,
+      "reconnectAfterLocalTimeoutExpired": true
+    }
+  },
+  "odJsonOverTcp": {
+    "enable": true,
+    "port": 8080
+  },
+  "contextRadius": 0.0,
+  "enableAgeCheck": true
 }

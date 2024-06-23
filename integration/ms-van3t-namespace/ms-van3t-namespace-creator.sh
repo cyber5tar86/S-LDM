@@ -1,10 +1,10 @@
 #!/bin/bash
 
 function cleanup {
-    set +e
+	set +e
 
-    sudo ip link del veth1root
-    sudo ip netns del ns1
+	sudo ip link del veth1root
+	sudo ip netns del ns1
 }
 trap cleanup EXIT
 

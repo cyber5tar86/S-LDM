@@ -1,108 +1,104 @@
 {
-    "version": 6,
-    "cmakeMinimumRequired": {
-        "major": 3,
-        "minor": 29,
-        "patch": 0
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 29,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "common.provider.conan",
+      "description": "",
+      "hidden": true,
+      "toolchainFile": "${sourceDir}/build/${presetName}/generators/conan_toolchain.cmake"
     },
-    "configurePresets": [
+    {
+      "name": "common.provider.system",
+      "description": "",
+      "hidden": true
+    },
+    {
+      "name": "base-ninja",
+      "displayName": "Default Config",
+      "description": "Default build using Ninja generator",
+      "generator": "Ninja",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "base-ninja-multi",
+      "displayName": "Ninja Multi-Config",
+      "description": "Default build using Ninja Multi-Config generator",
+      "generator": "Ninja Multi-Config",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "CMAKE_CONFIGURATION_TYPES": "Debug;Release;RelWithDebInfo;MinSizeRel"
+      }
+    },
+    {
+      "name": "common.flags",
+      "description": "",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS": "-Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Wcast-qual -Wshadow -Wformat=2 -Wundef -Werror=float-equal"
+      }
+    },
+    {
+      "name": "dependencies-provider",
+      "hidden": true,
+      "inherits": ["common.provider.conan"]
+    },
+    {
+      "name": "build",
+      "description": "Build the application",
+      "inherits": ["dependencies-provider"],
+      "binaryDir": "${sourceDir}/build/${presetName}"
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "build",
+      "configurePreset": "Build"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "Build",
+      "configurePreset": "build",
+      "output": { "outputOnFailure": true },
+      "execution": { "noTestsAction": "error", "stopOnFailure": true }
+    }
+  ],
+  "packagePresets": [
+    {
+      "name": "Build",
+      "configurePreset": "build"
+    }
+  ],
+  "workflowPresets": [
+    {
+      "name": "Build",
+      "steps": [
         {
-            "name": "common.provider.conan",
-            "description":"",
-            "hidden": true,
-            "toolchainFile": "${sourceDir}/build/${presetName}/generators/conan_toolchain.cmake"
+          "type": "configure",
+          "name": "build"
         },
         {
-            "name": "common.provider.system",
-            "description":"",
-            "hidden": true
+          "type": "build",
+          "name": "build"
         },
         {
-            "name": "base-ninja",
-            "displayName": "Default Config",
-            "description": "Default build using Ninja generator",
-            "generator": "Ninja",
-            "hidden": true,
-            "cacheVariables": {
-                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
-            }
+          "type": "test",
+          "name": "build"
         },
         {
-            "name": "base-ninja-multi",
-            "displayName": "Ninja Multi-Config",
-            "description": "Default build using Ninja Multi-Config generator",
-            "generator": "Ninja Multi-Config",
-            "hidden": true,
-            "cacheVariables": {
-                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-                "CMAKE_CONFIGURATION_TYPES": "Debug;Release;RelWithDebInfo;MinSizeRel"
-            }
-        },
-        {
-            "name": "common.flags",
-            "description": "",
-            "hidden": true,
-            "cacheVariables": {
-                "CMAKE_CXX_FLAGS": "-Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Wcast-qual -Wshadow -Wformat=2 -Wundef -Werror=float-equal"
-            }
-        },
-        {
-            "name": "dependencies-provider",
-            "hidden": true,
-            "inherits": [
-                "common.provider.conan"
-            ]
-        },
-        {
-            "name": "build",
-            "description": "Build the application",
-            "inherits": [
-                "dependencies-provider"
-            ],
-            "binaryDir": "${sourceDir}/build/${presetName}"
+          "type": "package",
+          "name": "build"
         }
-    ],
-    "buildPresets": [
-        {
-            "name": "build",
-            "configurePreset": "Build"
-        }
-    ],
-    "testPresets": [
-        {
-          "name": "Build",
-          "configurePreset": "build",
-          "output": {"outputOnFailure": true},
-          "execution": {"noTestsAction": "error", "stopOnFailure": true}
-        }
-    ],
-    "packagePresets": [
-        {
-            "name": "Build",
-            "configurePreset": "build"
-        }
-    ],
-    "workflowPresets": [
-        {
-            "name": "Build",
-            "steps": [
-                {
-                    "type": "configure",
-                    "name": "build"
-                },
-                {
-                    "type": "build",
-                    "name": "build"
-                },
-                {
-                    "type": "test",
-                    "name": "build"
-                },
-                {
-                    "type": "package",
-                    "name": "build"
-                }
-            ]
-        }
-    ]
-} 
+      ]
+    }
+  ]
+}

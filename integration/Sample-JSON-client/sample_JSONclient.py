@@ -2,7 +2,7 @@ import socket
 import sys
 import argparse
 import json
-import time
+#import time
 
 def main():
 	parser = argparse.ArgumentParser(description='Sample JSON TCP client for the S-LDM')
@@ -19,7 +19,7 @@ def main():
 	# Connect to the server (i.e., to the S-LDM)
 	tcp_sock.connect((args.server_ip_address, int(args.server_port)))
 	
-	welcome_msg=tcp_sock.recv(1024);
+	welcome_msg=tcp_sock.recv(1024)
 	
 	if(welcome_msg.decode("utf-8")=="Connection: confirmed"):
 		if float(args.radius_m)>0:
@@ -32,15 +32,15 @@ def main():
 		# Recive and parse reply
 		rx_data_str=tcp_sock.recv(4096).decode("utf-8")
 		
-		print(rx_data_str);
+		print(rx_data_str)
 		
 		rx_data=json.loads(rx_data_str)
 		
 		print("Received JSON file:")
-		print(json.dumps(rx_data,indent=2,sort_keys=False));
+		print(json.dumps(rx_data,indent=2,sort_keys=False))
 	else:
 		print("Error: received a wrong confirmation message:",welcome_msg.decode("utf-8"));
-		sys.exit(1);
+		sys.exit(1)
 
 if __name__ == "__main__":
-	main();
+	main()

@@ -7,7 +7,6 @@ project(
     DESCRIPTION "S-LDM"
 )
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 add_subdirectory(components)
-add_subdirectory(sldm)

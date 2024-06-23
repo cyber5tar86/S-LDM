@@ -45,7 +45,7 @@ class SLDMRecipe(ConanFile):
         cmake_layout(self)
 
     def requirements(self):
-        self.requires("amqp-cpp/4.3.24")
+        #self.requires("amqp-cpp/4.3.24")
         self.requires("qpid-proton/0.39.0")
         self.requires("boost/1.83.0")
         self.requires("cpprestsdk/2.10.19")
